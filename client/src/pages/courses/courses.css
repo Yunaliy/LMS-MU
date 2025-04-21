@@ -1,0 +1,106 @@
+.courses {
+  padding: 80px 0;
+  text-align: center;
+  min-height: 60vh;
+
+  h2 {
+    font-size: 32px;
+    color: #8a4baf;
+    margin-bottom: 30px;
+  }
+
+  .course-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 30px;
+  }
+}
+
+.courses-page {
+  min-height: 100vh;
+  background-color: var(--background-light);
+}
+
+/* Header Section */
+.courses-header {
+  background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+  color: var(--text-light);
+  padding: var(--spacing-xl) 0;
+  text-align: center;
+}
+
+/* Ensure section title and subtitle are white */
+.courses-header .section-title {
+  color: white;
+  font-weight: bold;
+  margin-bottom: var(--spacing-sm);
+}
+
+.courses-header .section-subtitle {
+  color: white;
+  font-size: 1.1rem;
+  margin-bottom: var(--spacing-md);
+}
+
+.search-filter-container {
+  display: flex;
+  gap: var(--spacing-md);
+  max-width: 800px;
+  margin: var(--spacing-lg) auto 0;
+  padding: 0 var(--spacing-sm);
+}
+
+.search-box,
+.filter-box {
+  position: relative;
+  flex: 1;
+}
+
+.search-icon,
+.filter-icon {
+  position: absolute;
+  left: var(--spacing-sm);
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-secondary);
+}
+
+.search-box input,
+.filter-box select {
+  padding-left: 2.5rem;
+  width: 100%;
+}
+
+/* Courses Section */
+.courses-section {
+  padding: var(--spacing-xl) 0;
+}
+
+.no-courses-message {
+  text-align: center;
+  padding: var(--spacing-xl);
+  color: var(--text-secondary);
+  font-size: 1.1rem;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .search-filter-container {
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 576px) {
+  .courses-header {
+    padding: var(--spacing-lg) 0;
+  }
+  
+  .section-title {
+    font-size: 1.75rem;
+  }
+  
+  .section-subtitle {
+    font-size: 1rem;
+  }
+}

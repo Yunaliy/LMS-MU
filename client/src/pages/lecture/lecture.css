@@ -1,0 +1,785 @@
+.lecture-page {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr;
+  gap: 20px;
+  padding: 20px;
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .left {
+    background-color: white;
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    max-width: 800px;
+    width: 100%;
+  }
+
+  .right {
+    background-color: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+    .lecture-form {
+      background-color: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      margin-bottom: 20px;
+
+      h2 {
+        margin-bottom: 20px;
+        color: #2c3e50;
+      }
+
+      label {
+        display: block;
+        margin-bottom: 5px;
+        color: #2c3e50;
+      }
+
+      input[type='text'] {
+        width: 100%;
+        padding: 8px;
+        margin-bottom: 15px;
+        border: 1px solid #dee2e6;
+        border-radius: 4px;
+      }
+
+      input[type='file'] {
+        margin-bottom: 15px;
+      }
+    }
+
+    @media (max-width: 768px) {
+      width: 80%;
+      margin-bottom: 10px;
+    }
+
+    .lecture-number {
+      background-color: #fff;
+      padding: 10px;
+      border: 1px solid black;
+      margin-top: 10px;
+      border-radius: 5px;
+      text-align: center;
+      cursor: pointer;
+
+      &:hover {
+        background-color: #8a4baf;
+        color: white;
+      }
+    }
+
+    .active {
+      background-color: #8a4baf;
+      color: white;
+    }
+  }
+}
+
+.progress {
+  background-color: #fff;
+  padding: 0;
+  border-radius: 1px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  margin: 0 0 0 0;
+  width: 120px;
+  height: 120px;
+  text-align: center;
+  position: relative;
+  left: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.progress-stats {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.progress-item {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.progress-circle {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: conic-gradient(
+    #4caf50 calc(var(--progress-percentage) * 1%),
+    #e6e6e6 0deg
+  );
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  transition: all 0.3s ease;
+  margin: 5px 0 20px 20px;
+}
+
+.progress-circle::before {
+  content: '';
+  position: absolute;
+  width: 70px;
+  height: 70px;
+  background: white;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+}
+
+.progress-value {
+  position: relative;
+  z-index: 1;
+  font-size: 28px;
+  font-weight: 600;
+  color: #2d3436;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Open Sans', sans-serif;
+}
+
+/* Add completion status styles */
+.completion-status {
+  margin-top: 10px;
+  font-size: 13px;
+  color: #636e72;
+}
+
+.completion-status strong {
+  color: var(--secondary-dark);
+}
+
+/* Add animation for progress updates */
+@keyframes progressUpdate {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.progress-circle.updating {
+  animation: progressUpdate 0.5s ease;
+}
+
+.lecture-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+  background-color: white;
+  transition: background-color 0.2s;
+}
+
+.lecture-item:hover {
+  background-color: #f5f5f5;
+}
+
+.lecture-info {
+  flex: 1;
+  cursor: pointer;
+}
+
+.lecture-info h3 {
+  margin: 0;
+  color: #333;
+}
+
+.lecture-info p {
+  margin: 0.5rem 0 0;
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.lecture-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.lecture-actions button {
+  padding: 0.5rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+}
+
+.edit-btn {
+  background-color: var(--secondary-color);
+}
+
+.delete-btn {
+  background-color: #f44336;
+}
+
+.lecture-actions button:hover {
+  opacity: 0.9;
+}
+
+.lecture-item.active {
+  background: #e3f2fd;
+  border-left: 4px solid var(--secondary-color);
+}
+
+.lecture-item.completed {
+  background: #f1f8e9;
+}
+
+.completion-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  background: #4caf50;
+  color: white;
+  border-radius: 50%;
+  font-weight: bold;
+  font-size: 14px;
+}
+
+.file-preview {
+  margin: 15px 0;
+  padding: 10px;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+  background-color: #f8f9fa;
+}
+
+.audio-player,
+.pdf-viewer,
+.ppt-viewer,
+.doc-viewer {
+  margin: 20px 0;
+  padding: 20px;
+  border-radius: 8px;
+  background-color: #fff;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+
+  &:hover {
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+  }
+
+  .file-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 15px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #eee;
+
+    .file-icon {
+      font-size: 28px;
+      margin-right: 15px;
+      padding: 10px;
+      border-radius: 8px;
+      background-color: #f8f9fa;
+      transition: all 0.3s ease;
+    }
+
+    .file-info {
+      h3 {
+        margin: 0;
+        font-size: 18px;
+        font-weight: 600;
+        color: #2c3e50;
+      }
+
+      p {
+        margin: 5px 0 0;
+        font-size: 14px;
+        color: #666;
+      }
+    }
+  }
+
+  .file-content {
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    overflow: hidden;
+    height: 600px;
+    position: relative;
+
+    iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+      background-color: #fff;
+    }
+
+    .loading-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(255, 255, 255, 0.9);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+
+      .spinner-border {
+        width: 3rem;
+        height: 3rem;
+        color: var(--secondary-color);
+      }
+    }
+  }
+
+  .file-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid #eee;
+
+    .btn {
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-weight: 500;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+
+      i {
+        font-size: 16px;
+      }
+    }
+
+    .btn-download {
+      background-color: var(--secondary-color);
+      color: white;
+      border: none;
+
+      &:hover {
+        background-color: var(--secondary-color);
+        transform: translateY(-1px);
+      }
+    }
+
+    .btn-fullscreen {
+      background-color: #f8f9fa;
+      color: #2c3e50;
+      border: 1px solid #dee2e6;
+
+      &:hover {
+        background-color: #e9ecef;
+        transform: translateY(-1px);
+      }
+    }
+  }
+}
+
+.pdf-viewer {
+  .file-header .file-icon {
+    color: #f44336;
+    background-color: rgba(244, 67, 54, 0.1);
+  }
+}
+
+.ppt-viewer {
+  .file-header .file-icon {
+    color: #ff9800;
+    background-color: rgba(255, 152, 0, 0.1);
+  }
+}
+
+.doc-viewer {
+  .file-header .file-icon {
+    color: var(--secondary-color);
+    background-color: rgba(33, 150, 243, 0.1);
+  }
+}
+
+.tick-icon {
+  color: #4caf50;
+  font-size: 24px;
+  margin-left: 10px;
+}
+
+.common-btn {
+  background-color: var(--secondary-color);
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-decoration: none;
+  display: inline-block;
+}
+
+.common-btn:hover {
+  background-color: var(--secondary-dark);
+  transform: translateY(-2px);
+}
+
+.common-btn.completed {
+  background-color: #4caf50;
+}
+
+.common-btn.completed:hover {
+  background-color: #45a049;
+}
+
+.common-btn:disabled {
+  background-color: #bdc3c7;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.audio-player {
+  margin: 20px 0;
+  padding: 25px;
+  border-radius: 12px;
+  background-color: #fff;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+
+  &:hover {
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+    transform: translateY(-2px);
+  }
+
+  .file-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #eee;
+
+    .file-icon {
+      font-size: 32px;
+      margin-right: 15px;
+      padding: 12px;
+      border-radius: 12px;
+      background-color: rgba(233, 30, 99, 0.1);
+      color: #e91e63;
+      transition: all 0.3s ease;
+    }
+
+    .file-info {
+      h3 {
+        margin: 0;
+        font-size: 20px;
+        font-weight: 600;
+        color: #2c3e50;
+      }
+
+      p {
+        margin: 5px 0 0;
+        font-size: 14px;
+        color: #666;
+      }
+    }
+  }
+
+  .audio-content {
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    padding: 20px;
+    margin: 15px 0;
+
+    audio {
+      width: 100%;
+      height: 40px;
+      border-radius: 20px;
+      background-color: #fff;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+
+      &::-webkit-media-controls-panel {
+        background-color: #fff;
+        border-radius: 20px;
+      }
+
+      &::-webkit-media-controls-play-button {
+        background-color: #e91e63;
+        border-radius: 50%;
+      }
+
+      &::-webkit-media-controls-timeline {
+        background-color: #e0e0e0;
+        border-radius: 10px;
+        height: 4px;
+      }
+
+      &::-webkit-media-controls-current-time-display,
+      &::-webkit-media-controls-time-remaining-display {
+        color: #666;
+        font-size: 14px;
+      }
+
+      &::-webkit-media-controls-volume-slider {
+        background-color: #e0e0e0;
+        border-radius: 10px;
+        height: 4px;
+      }
+    }
+  }
+
+  .audio-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid #eee;
+
+    .btn {
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-weight: 500;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+
+      i {
+        font-size: 16px;
+      }
+    }
+
+    .btn-download {
+      background-color: #e91e63;
+      color: white;
+      border: none;
+
+      &:hover {
+        background-color: #d81557;
+        transform: translateY(-1px);
+      }
+    }
+
+    .btn-fullscreen {
+      background-color: #f8f9fa;
+      color: #2c3e50;
+      border: 1px solid #dee2e6;
+
+      &:hover {
+        background-color: #e9ecef;
+        transform: translateY(-1px);
+      }
+    }
+  }
+}
+
+.no-lecture-message {
+  text-align: center;
+  padding: 2rem;
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.no-lecture-message h1 {
+  color: #333;
+  margin-bottom: 1rem;
+}
+
+.no-lecture-message p {
+  color: #666;
+  font-size: 1.1rem;
+}
+
+.no-content-message {
+  margin-top: 2rem;
+  padding: 2rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border: 2px dashed #dee2e6;
+}
+
+.no-content-message i {
+  font-size: 3rem;
+  color: #6c757d;
+  margin-bottom: 1rem;
+}
+
+.no-content-message h2 {
+  color: #495057;
+  margin-bottom: 0.5rem;
+}
+
+.no-content-message p {
+  color: #6c757d;
+  font-size: 1rem;
+}
+
+.no-lectures-message {
+  text-align: center;
+  padding: 2rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border: 2px dashed #dee2e6;
+  margin: 1rem 0;
+}
+
+.no-lectures-message i {
+  font-size: 2.5rem;
+  color: #6c757d;
+  margin-bottom: 1rem;
+}
+
+.no-lectures-message h3 {
+  color: #495057;
+  margin-bottom: 0.5rem;
+}
+
+.no-lectures-message p {
+  color: #6c757d;
+  font-size: 1rem;
+}
+
+/* Add specific styles for the video player */
+.video-player {
+  margin: 20px 0;
+  padding: 20px;
+  border-radius: 8px;
+  background-color: #fff;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+.video-player:hover {
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+}
+
+.video-player .file-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 15px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid #eee;
+}
+
+.video-player .file-header .file-icon {
+  font-size: 28px;
+  margin-right: 15px;
+  padding: 10px;
+  border-radius: 8px;
+  color: #673ab7;
+  background-color: rgba(103, 58, 183, 0.1);
+}
+
+.video-player .file-header .file-info h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+.video-player .file-header .file-info p {
+  margin: 5px 0 0;
+  font-size: 14px;
+  color: #666;
+}
+
+.video-player .video-content {
+  background-color: #000;
+  border-radius: 8px;
+  overflow: hidden;
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  margin: 15px 0;
+}
+
+.video-player .lecture-video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 8px;
+}
+
+.video-player .video-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 15px;
+  padding-top: 15px;
+  border-top: 1px solid #eee;
+}
+
+.video-player .video-actions .btn {
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.video-player .video-actions .btn-success {
+  background-color: #4caf50;
+  color: white;
+  border: none;
+}
+
+.video-player .video-actions .btn-success:hover {
+  background-color: #45a049;
+  transform: translateY(-1px);
+}
+
+.video-player .video-actions .btn-fullscreen {
+  background-color: #f8f9fa;
+  color: #2c3e50;
+  border: 1px solid #dee2e6;
+}
+
+.video-player .video-actions .btn-fullscreen:hover {
+  background-color: #e9ecef;
+  transform: translateY(-1px);
+}
+
+.video-player .completion-message {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: #4caf50;
+  font-weight: 500;
+}
+
+.video-container {
+  position: relative;
+  width: 100%;
+  max-width: 1000px;
+  margin: 0 auto;
+  background: var(--background-white);
+  border-radius: var(--border-radius-md);
+  overflow: hidden;
+}
+
+.help-text {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}

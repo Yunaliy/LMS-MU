@@ -1,0 +1,13 @@
+// vite.config.js
+import { defineConfig } from "file:///D:/embi/Elearning-Medinetul-Uloom/frontend/node_modules/vite/dist/node/index.js";
+import react from "file:///D:/embi/Elearning-Medinetul-Uloom/frontend/node_modules/@vitejs/plugin-react-swc/index.mjs";
+var vite_config_default = defineConfig({
+  plugins: [react()]
+  // optimizeDeps: {
+  //   include: ["@chapa_et/inline.js"], // Force Vite to include the package
+  // },
+});
+export {
+  vite_config_default as default
+};
+//# sourceMappingURL=data:application/json;base64,ewogICJ2ZXJzaW9uIjogMywKICAic291cmNlcyI6IFsidml0ZS5jb25maWcuanMiXSwKICAic291cmNlc0NvbnRlbnQiOiBbImNvbnN0IF9fdml0ZV9pbmplY3RlZF9vcmlnaW5hbF9kaXJuYW1lID0gXCJEOlxcXFxlbWJpXFxcXEVsZWFybmluZy1NZWRpbmV0dWwtVWxvb21cXFxcZnJvbnRlbmRcIjtjb25zdCBfX3ZpdGVfaW5qZWN0ZWRfb3JpZ2luYWxfZmlsZW5hbWUgPSBcIkQ6XFxcXGVtYmlcXFxcRWxlYXJuaW5nLU1lZGluZXR1bC1VbG9vbVxcXFxmcm9udGVuZFxcXFx2aXRlLmNvbmZpZy5qc1wiO2NvbnN0IF9fdml0ZV9pbmplY3RlZF9vcmlnaW5hbF9pbXBvcnRfbWV0YV91cmwgPSBcImZpbGU6Ly8vRDovZW1iaS9FbGVhcm5pbmctTWVkaW5ldHVsLVVsb29tL2Zyb250ZW5kL3ZpdGUuY29uZmlnLmpzXCI7aW1wb3J0IHsgZGVmaW5lQ29uZmlnIH0gZnJvbSAndml0ZSdcbmltcG9ydCByZWFjdCBmcm9tICdAdml0ZWpzL3BsdWdpbi1yZWFjdC1zd2MnXG5cbmV4cG9ydCBkZWZhdWx0IGRlZmluZUNvbmZpZyh7XG4gIHBsdWdpbnM6IFtyZWFjdCgpXSxcbiAgLy8gb3B0aW1pemVEZXBzOiB7XG4gIC8vICAgaW5jbHVkZTogW1wiQGNoYXBhX2V0L2lubGluZS5qc1wiXSwgLy8gRm9yY2UgVml0ZSB0byBpbmNsdWRlIHRoZSBwYWNrYWdlXG4gIC8vIH0sXG59KVxuXG5cblxuIl0sCiAgIm1hcHBpbmdzIjogIjtBQUF3VCxTQUFTLG9CQUFvQjtBQUNyVixPQUFPLFdBQVc7QUFFbEIsSUFBTyxzQkFBUSxhQUFhO0FBQUEsRUFDMUIsU0FBUyxDQUFDLE1BQU0sQ0FBQztBQUFBO0FBQUE7QUFBQTtBQUluQixDQUFDOyIsCiAgIm5hbWVzIjogW10KfQo=

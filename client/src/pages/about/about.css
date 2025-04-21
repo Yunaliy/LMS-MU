@@ -1,0 +1,22 @@
+.about {
+  padding: 80px 0;
+  text-align: center;
+  min-height: 55vh;
+  background: linear-gradient(to right, var(--primary-color), var(--primary-dark));
+  .about-content {
+    max-width: 800px;
+    margin: 0 auto;
+
+    h2 {
+      font-size: 32px;
+      color: white;
+      margin-bottom: 20px;
+    }
+
+    p {
+      font-size: 16px;
+      color: white;
+      line-height: 1.6;
+    }
+  }
+}
