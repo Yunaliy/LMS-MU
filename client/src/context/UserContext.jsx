@@ -20,17 +20,26 @@ export const UserContextProvider = ({ children }) => {
       });
 
       if (data.success) {
+        console.log("Login response:", data);
         toast.success(data.message);
         localStorage.setItem("token", data.token);
         setUser(data.user);
         setIsAuth(true);
         setBtnLoading(false);
+        
+        // If user is admin, redirect to admin dashboard
+        if (data.user.role === "admin") {
+          navigate("/admin/dashboard");
+        } else {
         navigate("/");
-        fetchMyCourse();
+        }
+        
+        fetchMyCourse && fetchMyCourse();
       } else {
         throw new Error(data.message || 'Login failed');
       }
     } catch (error) {
+      console.error("Login error:", error);
       setBtnLoading(false);
       setIsAuth(false);
       toast.error(error.response?.data?.message || 'Login failed');
@@ -105,12 +114,17 @@ export const UserContextProvider = ({ children }) => {
         }
       });
 
+      console.log("Fetch user response:", data);
+
       if (data.success) {
         setIsAuth(true);
         setUser(data.user);
       }
     } catch (error) {
       console.error("Error fetching user:", error);
+      localStorage.removeItem("token");
+      setIsAuth(false);
+      setUser(null);
     } finally {
       setLoading(false);
     }

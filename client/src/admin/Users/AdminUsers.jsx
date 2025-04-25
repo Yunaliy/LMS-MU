@@ -9,9 +9,6 @@ import "./users.css";
 
 const AdminUsers = ({ user }) => {
   const navigate = useNavigate();
-
-  if (user && user.mainrole !== "superadmin") return navigate("/");
-
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(false);
 
@@ -60,9 +57,9 @@ const AdminUsers = ({ user }) => {
       <div className="container-fluid py-4" style={{ paddingLeft: '0', paddingRight: '0' }}>
         <div className="card shadow" style={{
           marginLeft: 'auto',
-          width: '95%', // Increased to 95% of viewport width
-          maxWidth: 'none', // Removed maximum width constraint
-          marginRight: '5px' // Minimal right margin
+          width: '95%',
+          maxWidth: 'none',
+          marginRight: '5px'
         }}>
           <div className="card-header bg-primary text-white d-flex justify-content-between align-items-center">
             <h3 className="mb-0">

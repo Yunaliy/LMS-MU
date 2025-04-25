@@ -4,15 +4,19 @@ import axios from "axios";
 import { server } from "../../config";
 import toast from "react-hot-toast";
 import { FaClock, FaCheckCircle, FaTimesCircle, FaLock } from "react-icons/fa";
+import Loading from "../../components/Loading";
+import "./TakeAssessment.css";
 
 const TakeAssessment = () => {
   const { courseId } = useParams();
   const navigate = useNavigate();
   const [assessment, setAssessment] = useState(null);
-  const [answers, setAnswers] = useState([]);
-  const [timeLeft, setTimeLeft] = useState(0);
+  const [answers, setAnswers] = useState({});
+  const [timeLeft, setTimeLeft] = useState(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+  const [score, setScore] = useState(null);
   const [lectureProgress, setLectureProgress] = useState({
     completed: 0,
     total: 0,
@@ -35,12 +39,12 @@ const TakeAssessment = () => {
   }, [courseId]);
 
   useEffect(() => {
-    if (timeLeft > 0) {
+    if (timeLeft === null || timeLeft <= 0 || submitted) return;
+
       const timer = setInterval(() => {
         setTimeLeft((prev) => {
-          if (prev <= 1) {
-            clearInterval(timer);
-            submitAssessment();
+        if (prev <= 1 && !submitted) {
+          handleSubmit();
             return 0;
           }
           return prev - 1;
@@ -48,8 +52,7 @@ const TakeAssessment = () => {
       }, 1000);
 
       return () => clearInterval(timer);
-    }
-  }, [timeLeft]);
+  }, [timeLeft, submitted]);
 
   useEffect(() => {
     if (retryTimeLeft > 0) {
@@ -163,36 +166,50 @@ const TakeAssessment = () => {
 
       if (data.success) {
         setAssessment(data.assessment);
-        setAnswers(new Array(data.assessment.questions.length).fill(null));
+        if (data.assessment.questions && data.assessment.questions.length > 0) {
+          const initialAnswers = {};
+          data.assessment.questions.forEach((_, index) => {
+            initialAnswers[index] = null;
+          });
+          setAnswers(initialAnswers);
+        }
         setTimeLeft(data.assessment.timeLimit * 60);
         setLoading(false);
       }
     } catch (error) {
-      toast.error(error.response?.data?.message || "Failed to fetch assessment");
-      navigate(`/course/${courseId}`);
+      console.error('Error fetching assessment:', error);
+      toast.error("Failed to load assessment. Please try again.");
+      navigate(`/course/study/${courseId}`);
     }
   };
 
-  const handleAnswer = (questionIndex, answerIndex) => {
-    const newAnswers = [...answers];
-    newAnswers[questionIndex] = answerIndex;
-    setAnswers(newAnswers);
+  const handleAnswerChange = (questionIndex, answerIndex) => {
+    setAnswers((prev) => ({
+      ...prev,
+      [questionIndex]: answerIndex,
+    }));
   };
 
-  const submitAssessment = async () => {
+  const handleSubmit = async () => {
     if (submitting) return;
 
-    // Check if all questions are answered
-    if (answers.some((answer) => answer === null)) {
-      toast.error("Please answer all questions before submitting");
+    const unansweredCount = Object.values(answers).filter(
+      answer => answer === null
+    ).length;
+
+    if (unansweredCount > 0 && !window.confirm(
+      `You have ${unansweredCount} unanswered question${unansweredCount > 1 ? 's' : ''}. Are you sure you want to submit?`
+    )) {
       return;
     }
 
     setSubmitting(true);
     try {
+      const answersArray = assessment.questions.map((_, index) => answers[index]);
+      
       const { data } = await axios.post(
         `${server}/api/assessment/course/${courseId}/submit`,
-        { answers },
+        { answers: answersArray },
         {
           headers: {
             token: localStorage.getItem("token"),
@@ -200,52 +217,33 @@ const TakeAssessment = () => {
         }
       );
 
-      if (data.success) {
-        if (!data.passed) {
-          // Store the attempt time for failed attempts
+      setSubmitted(true);
+      setScore(data.score);
+
+      if (data.passed) {
+        toast.success("🎉 Congratulations! You've passed the assessment!");
+        setTimeout(() => {
+          navigate(`/course/study/${courseId}`);
+        }, 3000);
+      } else {
           localStorage.setItem(`assessment_${courseId}_lastAttempt`, Date.now().toString());
           setLastAttemptTime(Date.now());
           setCanRetry(false);
-          setRetryTimeLeft(600); // 10 minutes in seconds
-        }
-
-        toast.success(
-          `Assessment submitted! Score: ${data.score}% (${
-            data.passed ? "Passed" : "Failed"
-          })`
+        setRetryTimeLeft(300);
+        toast.error(
+          "You did not pass the assessment. Please review the course material and try again in 5 minutes."
         );
-        
-        // Only redirect if passed
-        if (data.passed) {
-          setTimeout(() => {
-            navigate(`/course/study/${courseId}`);
-          }, 2000);
-        }
       }
     } catch (error) {
+      console.error("Error submitting assessment:", error);
       toast.error(error.response?.data?.message || "Failed to submit assessment");
     } finally {
       setSubmitting(false);
     }
   };
 
-  if (loading) {
-    return (
-      <div className="d-flex justify-content-center align-items-center min-vh-100">
-        <div className="spinner-border text-primary" role="status">
-          <span className="visually-hidden">Loading...</span>
-        </div>
-      </div>
-    );
-  }
-
-  if (!assessment) {
-    return (
-      <div className="d-flex justify-content-center align-items-center min-vh-100">
-        <div className="alert alert-warning">No assessment found</div>
-      </div>
-    );
-  }
+  if (loading) return <Loading />;
+  if (!assessment) return <div>Assessment not found</div>;
 
   // Only show the "Assessment Locked" message if:
   // 1. User hasn't completed all lectures AND
@@ -289,24 +287,26 @@ const TakeAssessment = () => {
   // If user has already attempted the assessment, show a message
   if (hasAttempted && !assessmentStatus.isPassed) {
     return (
-      <div className="container py-5">
-        <div className="card shadow-sm">
-          <div className="card-body text-center">
-            <FaTimesCircle className="display-1 text-danger mb-3" />
-            <h2 className="card-title mb-3">Assessment Not Passed</h2>
-            <p className="card-text mb-4">
-              You scored {assessmentStatus.score}%. You need to score at least 50% to pass.
-            </p>
+      <div className="assessment-container">
+        <div className="result-card failed">
+          <FaTimesCircle className="result-icon" />
+          <h2>Assessment Not Passed</h2>
+          <p className="score">Your Score: {assessmentStatus.score}%</p>
+          <p className="passing-requirement">Required to Pass: {assessment?.passingScore || 50}%</p>
+          
             {!canRetry ? (
-              <div className="retry-timer mb-4">
-                <p className="text-warning">
-                  You can retry in: {Math.floor(retryTimeLeft / 60)}:
-                  {(retryTimeLeft % 60).toString().padStart(2, '0')}
-                </p>
+            <div className="retry-timer">
+              <p className="retry-message">
+                Please take some time to review the course material.
+                You can retry the assessment in:
+              </p>
+              <div className="time-remaining">
+                {Math.floor(retryTimeLeft / 60)}:{(retryTimeLeft % 60).toString().padStart(2, '0')}
+              </div>
               </div>
             ) : (
               <button
-                className="btn btn-primary me-3"
+              className="retry-btn"
                 onClick={() => {
                   setHasAttempted(false);
                   fetchAssessment();
@@ -315,33 +315,35 @@ const TakeAssessment = () => {
                 Retry Assessment
               </button>
             )}
+          
             <button
-              className="btn btn-secondary"
+            className="return-btn"
               onClick={() => navigate(`/course/study/${courseId}`)}
             >
               Return to Course
             </button>
-          </div>
         </div>
       </div>
     );
   } else if (hasAttempted && assessmentStatus.isPassed) {
     return (
-      <div className="container py-5">
-        <div className="card shadow-sm">
-          <div className="card-body text-center">
-            <FaCheckCircle className="display-1 text-success mb-3" />
-            <h2 className="card-title mb-3">Assessment Passed!</h2>
-            <p className="card-text mb-4">
-              Congratulations! You have successfully passed the assessment.
+      <div className="assessment-container">
+        <div className="result-card passed">
+          <FaCheckCircle className="result-icon" />
+          <h2>Congratulations! 🎉</h2>
+          <p className="score">Your Score: {assessmentStatus.score}%</p>
+          <p className="success-message">
+            You have successfully passed the assessment!
+          </p>
+          <p className="instruction-message">
+            Please return to the course page to download your certificate.
             </p>
             <button
-              className="btn btn-primary"
+            className="return-btn"
               onClick={() => navigate(`/course/study/${courseId}`)}
             >
-              Return to Course
+            Return to Get Certificate
             </button>
-          </div>
         </div>
       </div>
     );
@@ -354,69 +356,83 @@ const TakeAssessment = () => {
   };
 
   return (
-    <div className="take-assessment">
+    <div className="assessment-container">
       <div className="assessment-header">
-        <h2 className="mb-3">{assessment.title}</h2>
-        <p className="lead mb-4">{assessment.description}</p>
+        <h1>{assessment.title}</h1>
+        <div className="assessment-info">
         <div className="time-remaining">
-          <FaClock className="me-2" />
+            <FaClock />
+            <span className={timeLeft < 60 ? 'time-critical' : ''}>
           Time Remaining: {formatTime(timeLeft)}
+            </span>
+          </div>
+          <div className="question-count">
+            Questions: {assessment.questions.length}
+          </div>
+          <div className="passing-score">
+            Passing Score: {assessment.passingScore}%
+          </div>
         </div>
       </div>
 
-      <div className="questions">
-        {assessment.questions.map((question, qIndex) => (
-          <div key={qIndex} className="question">
-            <h3 className="mb-4">
-              Question {qIndex + 1} of {assessment.questions.length}
-            </h3>
-            <p className="lead mb-4">{question.question}</p>
-            <div className="options">
-              {question.options.map((option, oIndex) => (
-                <div
-                  key={oIndex}
-                  className={`option ${
-                    answers[qIndex] === oIndex ? "selected" : ""
+      <div className="questions-container">
+        {assessment.questions.map((question, index) => (
+          <div key={index} className="question-card">
+            <div className="question-header">
+              <span className="question-number">Question {index + 1}</span>
+              {answers[index] !== null && (
+                <FaCheckCircle className="answer-indicator answered" />
+              )}
+              {answers[index] === null && (
+                <FaTimesCircle className="answer-indicator unanswered" />
+              )}
+            </div>
+            <p className="question-text">{question.question}</p>
+            <div className="options-grid">
+              {question.options.map((option, optIndex) => (
+                <label
+                  key={optIndex}
+                  className={`option-label ${
+                    answers[index] === optIndex ? 'selected' : ''
                   }`}
-                  onClick={() => handleAnswer(qIndex, oIndex)}
                 >
-                  <div className="form-check">
                     <input
                       type="radio"
-                      className="form-check-input"
-                      name={`question-${qIndex}`}
-                      checked={answers[qIndex] === oIndex}
-                      onChange={() => handleAnswer(qIndex, oIndex)}
+                    name={`question-${index}`}
+                    value={optIndex}
+                    checked={answers[index] === optIndex}
+                    onChange={(e) => handleAnswerChange(index, parseInt(e.target.value))}
+                    disabled={submitted}
                     />
-                    <label className="form-check-label">{option}</label>
-                  </div>
-                </div>
+                  <span className="option-text">{option}</span>
+                </label>
               ))}
             </div>
           </div>
         ))}
       </div>
 
+      {submitted ? (
+        <div className="submission-result">
+          <h2>Assessment Completed</h2>
+          <p>Your Score: {score}%</p>
+          <p>
+            {score >= assessment.passingScore
+              ? 'Congratulations! You passed! 🎉'
+              : 'Keep practicing and try again.'}
+          </p>
+        </div>
+      ) : (
       <div className="assessment-footer">
         <button
-          className="btn btn-primary btn-lg submit-btn"
-          onClick={submitAssessment}
+            className="submit-btn"
+            onClick={handleSubmit}
           disabled={submitting}
         >
-          {submitting ? (
-            <>
-              <span
-                className="spinner-border spinner-border-sm me-2"
-                role="status"
-                aria-hidden="true"
-              ></span>
-              Submitting...
-            </>
-          ) : (
-            "Submit Assessment"
-          )}
+            {submitting ? 'Submitting...' : 'Submit Assessment'}
         </button>
       </div>
+      )}
     </div>
   );
 };

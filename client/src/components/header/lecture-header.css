@@ -1,0 +1,70 @@
+.lecture-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(
+    to right,
+    rgba(var(--secondary-color-rgb), 0.95),
+    rgba(var(--secondary-dark-rgb), 0.95)
+  );
+  padding: 0.75rem 1.5rem;
+  z-index: 1000;
+  box-shadow: var(--shadow-sm);
+  margin: 0;
+}
+
+.lecture-header-content {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  max-width: 1400px;
+  margin: 0 auto;
+  justify-content: space-between;
+}
+
+.back-button {
+  background: transparent;
+  border: none;
+  color: var(--text-light);
+  font-size: 1.25rem;
+  padding: 0.5rem;
+  cursor: pointer;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+
+.back-button:hover {
+  background: rgba(255, 255, 255, 0.1);
+  transform: translateX(-2px);
+}
+
+.course-title {
+  color: var(--text-light);
+  font-size: 1.25rem;
+  font-weight: 500;
+  margin: 0;
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.header-right {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+}
+
+@media (max-width: 768px) {
+  .lecture-header {
+    padding: 0.5rem 1rem;
+  }
+
+  .course-title {
+    font-size: 1.1rem;
+  }
+} 

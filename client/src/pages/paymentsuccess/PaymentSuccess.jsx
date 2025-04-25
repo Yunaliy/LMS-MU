@@ -5,6 +5,7 @@ import { CourseData } from '../../context/CourseContext';
 import { server } from '../../config';
 import axios from 'axios';
 import toast from 'react-hot-toast';
+import Loading from '../../components/Loading';
 
 const PaymentSuccess = ({ user }) => {
   const navigate = useNavigate();
@@ -51,7 +52,12 @@ const PaymentSuccess = ({ user }) => {
         
         if (messageShown === 'true' || messageShownRef.current) {
           console.log("Success message already shown for this transaction");
+          const lastPurchasedCourseId = sessionStorage.getItem('lastPurchasedCourseId');
+          if (lastPurchasedCourseId) {
+            navigate(`/course/study/${lastPurchasedCourseId}`);
+          } else {
           navigate('/dashboard');
+          }
           return;
         }
 
@@ -85,9 +91,17 @@ const PaymentSuccess = ({ user }) => {
             sessionStorage.setItem(messageKey, 'true');
           }
           
-          // Redirect to dashboard after successful verification
+          // Get the course ID from session storage
+          const lastPurchasedCourseId = sessionStorage.getItem('lastPurchasedCourseId');
+          
+          // Redirect to the course study page or dashboard
           setTimeout(() => {
+            if (lastPurchasedCourseId) {
+              navigate(`/course/study/${lastPurchasedCourseId}`);
+              sessionStorage.removeItem('lastPurchasedCourseId'); // Clean up
+            } else {
             navigate('/dashboard');
+            }
           }, 2000);
         } else {
           throw new Error(response.data.message || "Payment verification failed");
@@ -119,6 +133,7 @@ const PaymentSuccess = ({ user }) => {
 
   return (
     <div className="payment-success">
+      <Loading />
       <h2>Payment Successful!</h2>
       <p>Verifying your payment...</p>
     </div>

@@ -20,8 +20,25 @@ export const getAllCourses = TryCatch(async (req, res) => {
 export const getSingleCourse = TryCatch(async (req, res) => {
   const course = await Courses.findById(req.params.id);
 
+  if (!course) {
+    return res.status(404).json({
+      success: false,
+      message: "Course not found"
+    });
+  }
+
+  // Fetch lectures for this course
+  const lectures = await Lecture.find({ course: req.params.id });
+  
+  // Add lectures to the course object
+  const courseWithLectures = {
+    ...course.toObject(),
+    lectures: lectures
+  };
+
   res.json({
-    course,
+    success: true,
+    course: courseWithLectures
   });
 });
 
@@ -29,7 +46,6 @@ export const fetchLectures = TryCatch(async (req, res) => {
   const lectures = await Lecture.find({ course: req.params.id });
 
   const user = await User.findById(req.user._id);
-
   if (user.role === "admin") {
     return res.json({ lectures });
   }
@@ -97,69 +113,170 @@ export const getMyCourses = TryCatch(async (req, res) => {
 });
 
 export const checkout = TryCatch(async (req, res) => {
+  try {
   const user = await User.findById(req.user._id);
-
   const course = await Courses.findById(req.params.id);
+
+    if (!user || !course) {
+      return res.status(404).json({
+        success: false,
+        message: "User or course not found"
+      });
+    }
 
   if (user.subscription.includes(course._id)) {
     return res.status(400).json({
-      message: "You already have this course",
+        message: "You already have this course"
     });
   }
 
-  const options = {
-    amount: Number(course.price * 100),
-    currency: "INR",
-  };
+    // Initialize Chapa payment
+    const tx_ref = `COURSE-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    
+    const payload = {
+      amount: course.price,
+      currency: 'ETB',
+      email: user.email,
+      first_name: user.name.split(' ')[0],
+      last_name: user.name.split(' ').slice(1).join(' ') || 'N/A',
+      tx_ref: tx_ref,
+      callback_url: `${process.env.FRONTEND_URL}/verify-payment/${course._id}`,
+      return_url: `${process.env.FRONTEND_URL}/courses`,
+      customization: {
+        title: `Payment for ${course.title}`,
+        description: `Course enrollment payment for ${course.title}`
+      }
+    };
 
-  const order = await instance.orders.create(options);
+    // Make request to Chapa API to initialize payment
+    const response = await fetch('https://api.chapa.co/v1/transaction/initialize', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${process.env.CHAPA_SECRET_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(payload)
+    });
+
+    const data = await response.json();
+
+    if (!data.status || data.status !== 'success') {
+      throw new Error(data.message || 'Failed to initialize payment');
+    }
+
+    // Create a payment record in pending state
+    await Payment.create({
+      chapa_transaction_id: data.data.transaction_id,
+      chapa_reference_id: tx_ref,
+      amount: course.price,
+      currency: 'ETB',
+      status: 'created',
+      customer_info: {
+        first_name: payload.first_name,
+        last_name: payload.last_name,
+        email: payload.email
+      },
+      metadata: {
+        courseId: course._id,
+        userId: user._id
+      }
+    });
 
   res.status(201).json({
-    order,
-    course,
-  });
+      success: true,
+      message: 'Payment initialized successfully',
+      data: {
+        checkout_url: data.data.checkout_url,
+        tx_ref: tx_ref
+      }
+    });
+
+  } catch (error) {
+    console.error('Checkout error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Payment initialization failed',
+      error: error.message
+    });
+  }
 });
 
 export const paymentVerification = TryCatch(async (req, res) => {
-  const { razorpay_order_id, razorpay_payment_id, razorpay_signature } =
-    req.body;
+  try {
+    const { tx_ref } = req.body;
 
-  const body = razorpay_order_id + "|" + razorpay_payment_id;
+    // Find the payment record
+    const payment = await Payment.findOne({ chapa_reference_id: tx_ref });
+    if (!payment) {
+      return res.status(404).json({
+        success: false,
+        message: 'Payment record not found'
+      });
+    }
 
-  const expectedSignature = crypto
-    .createHmac("sha256", process.env.Razorpay_Secret)
-    .update(body)
-    .digest("hex");
-
-  const isAuthentic = expectedSignature === razorpay_signature;
-
-  if (isAuthentic) {
-    await Payment.create({
-      razorpay_order_id,
-      razorpay_payment_id,
-      razorpay_signature,
+    // Verify payment status with Chapa
+    const response = await fetch(`https://api.chapa.co/v1/transaction/verify/${tx_ref}`, {
+      headers: {
+        'Authorization': `Bearer ${process.env.CHAPA_SECRET_KEY}`
+      }
     });
 
-    const user = await User.findById(req.user._id);
+    const data = await response.json();
 
-    const course = await Courses.findById(req.params.id);
+    if (data.status === 'success' && data.data.status === 'success') {
+      // Update payment record
+      payment.status = 'success';
+      payment.payment_method = data.data.payment_method;
+      await payment.save();
 
+      // Get user and course from metadata
+      const user = await User.findById(payment.metadata.userId);
+      const course = await Courses.findById(payment.metadata.courseId);
+
+      if (!user || !course) {
+        throw new Error('User or course not found');
+      }
+
+      // Add course to user's subscription
     user.subscription.push(course._id);
+      await user.save();
 
+      // Create progress record for the course
     await Progress.create({
       course: course._id,
       completedLectures: [],
-      user: req.user._id,
+        user: user._id
     });
 
-    await user.save();
+      // Create notification
+      await createNotification(
+        user._id,
+        'course',
+        'Course Enrollment Successful',
+        `You have successfully enrolled in ${course.title}`,
+        course._id
+      );
 
-    res.status(200).json({
-      message: "Course Purchased Successfully",
+      return res.status(200).json({
+        success: true,
+        message: 'Course purchased successfully'
     });
   } else {
+      // Update payment record as failed
+      payment.status = 'failed';
+      await payment.save();
+
     return res.status(400).json({
-      message: "Payment Failed",
+        success: false,
+        message: 'Payment verification failed'
+      });
+    }
+  } catch (error) {
+    console.error('Payment verification error:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Payment verification failed',
+      error: error.message
     });
   }
 });
@@ -264,7 +381,7 @@ export const getYourProgress = TryCatch(async (req, res) => {
 export const addLecture = TryCatch(async (req, res) => {
   try {
     const courseId = req.params.id;
-    const { title, description, videoSource, youtubeVideoId } = req.body;
+    const { title,  videoSource, youtubeVideoId } = req.body;
     const file = req.file;
 
     if (!courseId) {
@@ -286,11 +403,11 @@ export const addLecture = TryCatch(async (req, res) => {
     }
 
     // Validate required fields based on video source
-    if (!title || !description) {
+    if (!title) {
       if (file) await fs.promises.unlink(file.path);
       return res.status(400).json({
         success: false,
-        message: "Title and description are required"
+        message: "Title is required"
       });
     }
 
@@ -304,7 +421,7 @@ export const addLecture = TryCatch(async (req, res) => {
 
       const lecture = await Lecture.create({
         title,
-        description,
+       
         videoSource: 'youtube',
         youtubeVideoId,
         fileType: 'video',
@@ -360,7 +477,7 @@ export const addLecture = TryCatch(async (req, res) => {
 
       const lecture = await Lecture.create({
         title,
-        description,
+        
         file: relativePath,
         fileType,
         videoSource: 'local',
@@ -419,7 +536,7 @@ export const createCourse = async (req, res) => {
 
 export const updateLecture = TryCatch(async (req, res) => {
   const lectureId = req.params.id;
-  const { title, description, videoSource, youtubeVideoId } = req.body;
+  const { title,  videoSource, youtubeVideoId } = req.body;
   const file = req.file;
   let oldFilePath = null;
 
@@ -438,7 +555,7 @@ export const updateLecture = TryCatch(async (req, res) => {
     }
 
     lecture.title = title || lecture.title;
-    lecture.description = description || lecture.description;
+    
     lecture.videoSource = videoSource || lecture.videoSource;
 
     if (lecture.videoSource === 'youtube') {

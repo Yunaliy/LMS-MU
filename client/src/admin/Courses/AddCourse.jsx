@@ -1,172 +1,299 @@
-import React, { useState } from "react";
-import "./addCourse.css";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import toast from "react-hot-toast";
 import axios from "axios";
 import { server } from "../../config";
 import { CourseData } from "../../context/CourseContext";
+import Layout from "../Utils/Layout";
+import ReactQuill from 'react-quill';
+import 'react-quill/dist/quill.snow.css';
+import './addCourse.css';
 
 const categories = [
-  "Web Development",
-  "App Development",
-  "Game Development",
-  "Data Science",
-  "Artificial Intelligence",
+  "Quran",
+  "Hadith",
+  "Tafsir",
+  "Fiqhi",
+  "Lugha",
+  "Terbiya",
+  "Aqidah",
 ];
 
-const AddCourse = () => {
+// Quill editor modules configuration
+const quillModules = {
+  toolbar: [
+    [{ 'header': [1, 2, 3, false] }],
+    ['bold', 'italic', 'underline', 'strike'],
+    [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+    ['link'],
+    ['clean']
+  ],
+};
+
+const quillFormats = [
+  'header',
+  'bold', 'italic', 'underline', 'strike',
+  'list', 'bullet',
+  'link'
+];
+
+const CourseForm = () => {
+  const { id } = useParams();
   const navigate = useNavigate();
   const { fetchCourses } = CourseData();
-  
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [category, setCategory] = useState("");
-  const [price, setPrice] = useState("");
-  const [createdBy, setCreatedBy] = useState("");
-  const [duration, setDuration] = useState("");
-  const [image, setImage] = useState("");
-  const [imagePrev, setImagePrev] = useState("");
-  const [btnLoading, setBtnLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [course, setCourse] = useState({
+    title: '',
+    description: '',
+    category: '',
+    price: '',
+    createdBy: '',
+    duration: '',
+    image: null
+  });
+  const [previewImage, setPreviewImage] = useState('');
+  const isEditMode = Boolean(id);
 
-  const changeImageHandler = (e) => {
-    const file = e.target.files[0];
-    const reader = new FileReader();
+  useEffect(() => {
+    if (isEditMode) {
+      fetchCourse();
+    }
+  }, [id]);
 
-    reader.readAsDataURL(file);
-
-    reader.onloadend = () => {
-      setImagePrev(reader.result);
-      setImage(file);
-    };
-  };
-
-  const submitHandler = async (e) => {
-    e.preventDefault();
-    setBtnLoading(true);
-
-    const myForm = new FormData();
-
-    myForm.append("title", title);
-    myForm.append("description", description);
-    myForm.append("category", category);
-    myForm.append("price", price);
-    myForm.append("createdBy", createdBy);
-    myForm.append("duration", duration);
-    myForm.append("image", image);
-
-    console.log("Submitting form with image:", image);
-
+  const fetchCourse = async () => {
     try {
-      const { data } = await axios.post(
-        `${server}/api/course/new`,
-        myForm,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-            token: localStorage.getItem("token"),
-          },
-        }
-      );
-
-      await fetchCourses(); // Fetch updated course list
-      toast.success(data.message);
-      navigate("/admin/courses");
+      const response = await axios.get(`${server}/api/course/${id}`);
+      const courseData = response.data.course;
+      setCourse({
+        title: courseData.title,
+        category: courseData.category,
+        description: courseData.description,
+        createdBy: courseData.createdBy,
+        duration: courseData.duration,
+        price: courseData.price,
+        image: null
+      });
+      if (courseData.image) {
+        setPreviewImage(`${server}/uploads/${courseData.image}`);
+      }
     } catch (error) {
-      console.error("Error creating course:", error.response?.data || error.message);
-      toast.error(error.response?.data?.message || "Failed to create course");
-    } finally {
-      setBtnLoading(false);
+      console.error('Error fetching course:', error);
+      toast.error('Failed to load course details');
+      navigate('/admin/courses');
     }
   };
 
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setCourse(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleDescriptionChange = (content) => {
+    setCourse(prev => ({
+      ...prev,
+      description: content
+    }));
+  };
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setCourse(prev => ({
+        ...prev,
+        image: file
+      }));
+      setPreviewImage(URL.createObjectURL(file));
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      const formData = new FormData();
+      Object.keys(course).forEach(key => {
+        if (course[key] !== null) {
+          formData.append(key, course[key]);
+        }
+      });
+
+      const endpoint = isEditMode 
+        ? `${server}/api/course/${id}`
+        : `${server}/api/admin/course/new`;
+      
+      const method = isEditMode ? 'put' : 'post';
+
+      const { data } = await axios[method](endpoint, formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+          token: localStorage.getItem("token"),
+        },
+      });
+
+      await fetchCourses();
+      toast.success(data.message || `Course ${isEditMode ? 'updated' : 'created'} successfully`);
+      navigate("/admin/courses");
+    } catch (error) {
+      console.error('Error saving course:', error);
+      toast.error(error.response?.data?.message || `Failed to ${isEditMode ? 'update' : 'create'} course`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCancel = () => {
+    navigate('/admin/courses');
+  };
+
   return (
-    <div className="add-course-page">
-      <div className="add-course-form">
-        <h2>Add New Course</h2>
-        <form onSubmit={submitHandler}>
-          <label htmlFor="title">Course Title</label>
-          <input
-            type="text"
-            id="title"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            required
-          />
+    <Layout>
+      <div className="admin-edit-course-container">
+        <div className="admin-edit-course-header">
+          <h2>{isEditMode ? 'Edit Course' : 'Add New Course'}</h2>
+        </div>
+        
+        <div className="admin-edit-course-content">
+          <form onSubmit={handleSubmit} className="admin-edit-course-form">
+            <div className="form-row">
+              <div className="form-group">
+                <label htmlFor="title">Title</label>
+                <input
+                  type="text"
+                  id="title"
+                  name="title"
+                  value={course.title}
+                  onChange={handleInputChange}
+                  required
+                  placeholder="Enter course title"
+                />
+              </div>
+              
+              <div className="form-group">
+                <label htmlFor="category">Category</label>
+                <select
+                  id="category"
+                  name="category"
+                  value={course.category}
+                  onChange={handleInputChange}
+                  required
+                >
+                  <option value="">Select Category</option>
+                  {categories.map((cat) => (
+                    <option key={cat} value={cat}>
+                      {cat}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
 
-          <label htmlFor="description">Course Description</label>
-          <textarea
-            id="description"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            required
-          />
+            <div className="form-group">
+              <label htmlFor="description">Description</label>
+              <div className="quill-editor-container">
+                <ReactQuill
+                  value={course.description}
+                  onChange={handleDescriptionChange}
+                  modules={quillModules}
+                  formats={quillFormats}
+                  theme="snow"
+                  placeholder="Enter course description..."
+                />
+              </div>
+            </div>
 
-          <label htmlFor="category">Category</label>
-          <select
-            id="category"
-            value={category}
-            onChange={(e) => setCategory(e.target.value)}
-            required
-          >
-            <option value="">Select Category</option>
-            {categories.map((cat) => (
-              <option key={cat} value={cat}>
-                {cat}
-              </option>
-            ))}
-          </select>
+            <div className="form-row">
+              <div className="form-group">
+                <label htmlFor="createdBy">Created By</label>
+                <input
+                  type="text"
+                  id="createdBy"
+                  name="createdBy"
+                  value={course.createdBy}
+                  onChange={handleInputChange}
+                  required
+                  placeholder="Enter instructor name"
+                />
+              </div>
+              
+              <div className="form-group">
+                <label htmlFor="duration">Duration (weeks)</label>
+                <input
+                  type="number"
+                  id="duration"
+                  name="duration"
+                  value={course.duration}
+                  onChange={handleInputChange}
+                  required
+                  min="1"
+                  placeholder="Enter course duration"
+                />
+              </div>
+              
+              <div className="form-group">
+                <label htmlFor="price">Price (ETB)</label>
+                <input
+                  type="number"
+                  id="price"
+                  name="price"
+                  value={course.price}
+                  onChange={handleInputChange}
+                  required
+                  min="0"
+                  placeholder="Enter course price"
+                />
+              </div>
+            </div>
 
-          <label htmlFor="price">Price (ETB)</label>
-          <input
-            type="number"
-            id="price"
-            value={price}
-            onChange={(e) => setPrice(e.target.value)}
-            required
-          />
+            <div className="image-upload-group">
+              <label>Course Image</label>
+              <div className="image-upload-container">
+                <div className="image-input">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageChange}
+                    required={!isEditMode}
+                  />
+                </div>
+                {previewImage && (
+                  <div className="image-preview-container">
+                    <img
+                      src={previewImage}
+                      alt="Course preview"
+                      className="image-preview"
+                    />
+                  </div>
+                )}
+              </div>
+            </div>
 
-          <label htmlFor="createdBy">Created By</label>
-          <input
-            type="text"
-            id="createdBy"
-            value={createdBy}
-            onChange={(e) => setCreatedBy(e.target.value)}
-            required
-          />
-
-          <label htmlFor="duration">Duration (weeks)</label>
-          <input
-            type="number"
-            id="duration"
-            value={duration}
-            onChange={(e) => setDuration(e.target.value)}
-            required
-          />
-
-          <label htmlFor="image">Course Image</label>
-          <input
-            type="file"
-            id="image"
-            accept="image/*"
-            onChange={changeImageHandler}
-            required
-          />
-
-          {imagePrev && (
-            <img
-              src={imagePrev}
-              alt="Preview"
-              style={{ maxWidth: "200px", marginTop: "10px" }}
-            />
-          )}
-
-          <button type="submit" disabled={btnLoading}>
-            {btnLoading ? "Adding Course..." : "Add Course"}
-          </button>
-        </form>
+            <div className="form-actions">
+              <button
+                type="button"
+                className="cancel-btn"
+                onClick={handleCancel}
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="submit-btn"
+                disabled={loading}
+              >
+                {loading 
+                  ? (isEditMode ? 'Updating...' : 'Creating...') 
+                  : (isEditMode ? 'Update Course' : 'Create Course')}
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
-    </div>
+    </Layout>
   );
 };
 
-export default AddCourse;
+export default CourseForm;

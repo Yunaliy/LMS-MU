@@ -6,7 +6,7 @@ import './EditLectureModal.css';
 
 const EditLectureModal = ({ lecture, onClose, onUpdate }) => {
   const [title, setTitle] = useState(lecture.title || '');
-  const [description, setDescription] = useState(lecture.description || '');
+  // const [description, setDescription] = useState(lecture.description || '');
   const [videoSource, setVideoSource] = useState(lecture.videoSource || 'local');
   const [youtubeVideoId, setYoutubeVideoId] = useState(lecture.youtubeVideoId || '');
   const [file, setFile] = useState(null);
@@ -14,7 +14,7 @@ const EditLectureModal = ({ lecture, onClose, onUpdate }) => {
 
   useEffect(() => {
     setTitle(lecture.title || '');
-    setDescription(lecture.description || '');
+    // setDescription(lecture.description || '');
     setVideoSource(lecture.videoSource || 'local');
     setYoutubeVideoId(lecture.youtubeVideoId || '');
     setFile(null);
@@ -34,7 +34,7 @@ const EditLectureModal = ({ lecture, onClose, onUpdate }) => {
     try {
       const formData = new FormData();
       formData.append('title', title);
-      formData.append('description', description);
+      // formData.append('description', description);
       formData.append('videoSource', videoSource);
 
       if (videoSource === 'youtube') {
@@ -89,14 +89,14 @@ const EditLectureModal = ({ lecture, onClose, onUpdate }) => {
             />
           </div>
 
-          <div className="form-group">
+          {/* <div className="form-group">
             <label>Description:</label>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               required
             />
-          </div>
+          </div> */}
 
           <div className="form-group">
             <label>Video Source:</label>

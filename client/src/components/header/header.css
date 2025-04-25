@@ -6,7 +6,7 @@
       rgba(var(--secondary-color-rgb), 0.85), 
       rgba(var(--secondary-dark-rgb), 0.85)
     ),
-    url('islamic-pattern.png') center/cover;
+    url('/islamic-pattern.png') center/cover;
   
   color: var(--text-light);
   padding: var(--spacing-sm) 0;
@@ -31,34 +31,29 @@
 }
 
 .logo-link {
-  display: inline-block;
-  text-decoration: none;
+  display: flex;
+  align-items: center;
 }
 
 .logo img {
-  width: 60px; /* Adjust based on your preference */
-  height: auto;
-  /* border-radius: 12px; Soft rounded corners */
-  /* box-shadow: 0 4px 10px rgba(255, 255, 255, 0.459); Subtle shadow */
-  /* transition: transform 0.3s ease, box-shadow 0.3s ease; */
-}
-
-.logo img:hover {
-  transform: scale(1.05);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
-}
-.header-center {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  flex: 1;
-  margin: 0 var(--spacing-lg);
+  height: 60px;
+  width: auto;
+  display: block;
+ 
 }
 
 .main-nav {
   display: flex;
   align-items: center;
   gap: var(--spacing-md);
+  margin-left: auto;
+}
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  margin-right: 2rem;
 }
 
 .nav-link {
@@ -68,6 +63,8 @@
   padding: var(--spacing-xs) var(--spacing-sm);
   border-radius: var(--border-radius-sm);
   transition: all 0.3s ease;
+  position: relative;
+  padding-bottom: 3px;
 }
 
 .nav-link:hover {
@@ -75,10 +72,87 @@
   background-color: rgba(255, 255, 255, 0.1);
 }
 
+.nav-link.active {
+  color: var(--primary-color);
+}
+
+.nav-link.active::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background-color: var(--primary-color);
+  transform: scaleX(1);
+  transition: transform 0.3s ease;
+}
+
+.nav-link:not(.active)::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background-color: var(--primary-color);
+  transform: scaleX(0);
+  transition: transform 0.3s ease;
+}
+
+.nav-link:hover::after {
+  transform: scaleX(1);
+}
+
+.auth-buttons {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.auth-button {
+  text-decoration: none;
+  padding: 0.4rem 1.5rem;
+  margin-top: 1rem;
+  border-radius: 10px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  border: 1px solid transparent;
+}
+
+.login-button {
+  background-color: transparent;
+  color: var(--primary-color);
+  border-color: var(--primary-dark);
+}
+
+.login-button:hover {
+  background-color: #f59f0b6d;
+  /* color: var(--secondary-dark); */
+}
+
+.signup-button {
+  background-color: var(--primary-dark);
+  color: var(--text-light);
+}
+
+.signup-button:hover {
+  background-color: var(--primary-color);
+  /* border-color: var(--primary-dark); */
+  /* color: var(--secondary-dark); */
+}
+
+.user-section {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
 .profile-link {
   display: flex;
   align-items: center;
   position: relative;
+  text-decoration: none;
 }
 
 .header-avatar {
@@ -144,21 +218,33 @@
   
   .main-nav {
     width: 100%;
-    justify-content: center;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .nav-links {
+    margin-right: 0;
+    margin-bottom: 1rem;
   }
   
-  .header-center {
-    margin: var(--spacing-sm) 0;
+  .auth-buttons,
+  .user-section {
+    margin: 0.5rem 0;
   }
 }
 
 @media (max-width: 576px) {
-  .main-nav {
+  .nav-links {
     flex-wrap: wrap;
     justify-content: center;
   }
   
   .nav-link {
+    font-size: 0.9rem;
+  }
+  
+  .auth-button {
+    padding: 0.4rem 1.2rem;
     font-size: 0.9rem;
   }
 }

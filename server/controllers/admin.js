@@ -11,25 +11,50 @@ import { createNotification } from "./Notification.js";
 
 export const createCourse = TryCatch(async (req, res) => {
   try {
-    console.log("Creating new course with data:", req.body);
-    console.log("File information:", req.file);
+    console.log("=== Create Course Debug Logs ===");
+    console.log("1. Request body:", req.body);
+    console.log("2. File object:", req.file);
+    console.log("3. Headers:", req.headers);
     
     const { title, description, category, createdBy, duration, price } = req.body;
 
+    // Log parsed values
+    console.log("4. Parsed values:", {
+      title, description, category, createdBy, 
+      duration: Number(duration),
+      price: Number(price)
+    });
+
+    // Validate required fields
+    if (!title || !description || !category || !createdBy || !duration || !price) {
+      console.log("5. Validation failed - Missing required fields");
+      if (req.file) {
+        await fsPromises.unlink(req.file.path);
+      }
+      return res.status(400).json({
+        success: false,
+        message: "All fields are required"
+      });
+    }
+
     if (!req.file) {
-      console.log("No file uploaded");
+      console.log("6. No file uploaded");
       return res.status(400).json({
         success: false,
         message: "Please upload a course image"
       });
     }
 
-    // Clean the file path to store only the relative path
-    const imagePath = path.relative('server/uploads', req.file.path) // Get relative path from 'server/uploads'
-    .replace(/\\/g, '/'); // Normalize Windows backslashes to forward slashes
+    // Create relative path for the image - use the actual upload path from multer
+    const imagePath = req.file.path
+      .split('uploads')[1] // Get the part after 'uploads'
+      .replace(/\\/g, '/') // Replace Windows backslashes with forward slashes
+      .replace(/^\/+/, ''); // Remove leading slashes
 
-console.log("Processed image path:", imagePath);
+    console.log("7. Processed image path:", imagePath);
+    console.log("8. Full file path:", req.file.path);
 
+    try {
     const course = await Courses.create({
       title,
       description,
@@ -40,37 +65,53 @@ console.log("Processed image path:", imagePath);
       price: Number(price),
     });
 
+      console.log("9. Course created successfully:", course);
+
      // Create notification for all users
+      try {
   await createNotification(
     "course",
     "New Course Available",
     `New course added: ${course.title}`,
     course._id
   );
-
-    console.log("Course created successfully:", course._id);
+        console.log("10. Notification created successfully");
+      } catch (notificationError) {
+        console.error("11. Error creating notification:", notificationError);
+        // Continue execution even if notification fails
+      }
 
     res.status(201).json({
       success: true,
       message: "Course Created Successfully",
       course
     });
+    } catch (dbError) {
+      console.error("12. Database error:", dbError);
+      throw dbError;
+    }
   } catch (error) {
+    console.error("13. Final error catch block:");
+    console.error("Error details:", {
+      message: error.message,
+      stack: error.stack,
+      name: error.name
+    });
+    
     // If there was an error and a file was uploaded, delete it
     if (req.file) {
       try {
         await fsPromises.unlink(req.file.path);
-        console.log("Deleted uploaded file due to error");
+        console.log("14. Deleted uploaded file due to error");
       } catch (unlinkError) {
-        console.error("Error deleting file:", unlinkError);
+        console.error("15. Error deleting file:", unlinkError);
       }
     }
 
-    console.error("Error creating course:", error);
     res.status(500).json({
       success: false,
       message: "Error creating course",
-      error: error.message
+      error: error.message || "Internal server error"
     });
   }
 });

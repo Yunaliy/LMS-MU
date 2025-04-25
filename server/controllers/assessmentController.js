@@ -158,4 +158,52 @@ export const getAssessmentStatus = async (req, res) => {
       error: error.message
     });
   }
+};
+
+// Update assessment
+export const updateAssessment = async (req, res) => {
+  try {
+    const { courseId } = req.params;
+    const { title, description, questions, timeLimit, passingScore } = req.body;
+
+    // Check if course exists
+    const course = await Courses.findById(courseId);
+    if (!course) {
+      return res.status(404).json({
+        success: false,
+        message: "Course not found",
+      });
+    }
+
+    // Find and update the assessment
+    const assessment = await Assessment.findOneAndUpdate(
+      { courseId },
+      {
+        title,
+        description,
+        questions,
+        timeLimit,
+        passingScore,
+      },
+      { new: true }
+    );
+
+    if (!assessment) {
+      return res.status(404).json({
+        success: false,
+        message: "Assessment not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Assessment updated successfully",
+      assessment,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
 }; 

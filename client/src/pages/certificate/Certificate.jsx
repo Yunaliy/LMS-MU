@@ -57,8 +57,12 @@ const Certificate = () => {
             // Generate certificate data right away
             const newCertificateData = {
               studentName: user.name,
-              courseName: course.title,
-              completionDate: new Date().toLocaleDateString(),
+              courseName: course.title.replace(/"/g, ''), // Remove quotes from course name
+              completionDate: new Date().toLocaleDateString('en-US', { 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+              }),
               certificateId: `CERT-${Math.random().toString(36).substr(2, 9).toUpperCase()}`,
               score: `${score}%`,
             };
@@ -133,7 +137,7 @@ const Certificate = () => {
       <div className="certificate-page py-5">
         <div className="container">
           <div className="certificate-wrapper bg-white shadow-lg rounded-3 p-4 mx-auto">
-            <div className="certificate border border-2 border-golden p-5">
+            <div className="certificate border border-4 border-golden p-5">
               <div className="certificate-header text-center mb-4">
                 <div className="certificate-logo mb-3">
                   <img
@@ -151,13 +155,13 @@ const Certificate = () => {
                 <p className="certificate-text fs-5 mb-2">
                   This is to certify that
                 </p>
-                <h2 className="student-name display-4 fw-bold text-primary mb-2">
+                <h2 className="student-name display-4 fw-bold mb-2">
                   {certificateData.studentName}
                 </h2>
                 <p className="certificate-text fs-5 mb-2">
                   has successfully completed the course
                 </p>
-                <h3 className="course-name h2 fw-bold text-secondary mb-3">
+                <h3 className="course-name h2 fw-bold mb-3">
                   {certificateData.courseName}
                 </h3>
                 <p className="certificate-text fs-5 mb-2">
@@ -172,7 +176,7 @@ const Certificate = () => {
               <div className="certificate-footer mt-5">
                 <div className="row align-items-end">
                   <div className="col-12 text-center mb-4">
-                    <div className="certificate-id small text-muted">
+                    <div className="certificate-id small">
                       Certificate ID: {certificateData.certificateId}
                     </div>
                   </div>
@@ -180,13 +184,13 @@ const Certificate = () => {
                     <div className="row signatures justify-content-around">
                       <div className="col-5 text-center">
                         <div className="signature">
-                          <div className="signature-line border-bottom border-dark"></div>
+                          <div className="signature-line"></div>
                           <p className="mt-2 mb-0 fw-bold">Course Instructor</p>
                         </div>
                       </div>
                       <div className="col-5 text-center">
                         <div className="signature">
-                          <div className="signature-line border-bottom border-dark">
+                          <div className="signature-line">
                             Medinatul-Uloom
                           </div>
                           <p className="mt-2 mb-0 fw-bold">Program Director</p>
@@ -238,4 +242,4 @@ const Certificate = () => {
   );
 };
 
-export default Certificate; 
+export default Certificate;

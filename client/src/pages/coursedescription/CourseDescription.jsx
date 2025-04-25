@@ -22,6 +22,18 @@ const CourseDescription = ({ user }) => {
     }
   }, [params.id, fetchCourse]);  
 
+  const getImageUrl = (imagePath) => {
+    if (!imagePath) return '/placeholder-course.jpg';
+    
+    const cleanPath = imagePath
+      .split('\\')
+      .join('/')
+      .replace(/^\/+/, '')
+      .replace(/^uploads\/?/, '');
+    
+    return `${server}/uploads/${cleanPath}`;
+  };
+
   const checkoutHandler = async () => {
     if (!user || !course) {
       toast.error("Please wait while we load the course details");
@@ -43,6 +55,10 @@ const CourseDescription = ({ user }) => {
       // Generate unique transaction reference
       const tx_ref = `course-${params.id}-${Date.now()}`;
       
+      // Get the current origin (protocol + hostname + port)
+      const currentOrigin = window.location.origin;
+      const return_url = `${currentOrigin}/payment-success`;
+      
       // Initialize Chapa payment
       const { data } = await axios.post(
         `${server}/api/payment/initialize`,        
@@ -51,7 +67,9 @@ const CourseDescription = ({ user }) => {
           email: user.email,
           courseId: params.id,
           userId: user._id,
-          courseTitle: course.title
+          courseTitle: course.title,
+          return_url, // Add the return URL
+          tx_ref // Add the transaction reference
         },
         { 
           headers: { 
@@ -62,6 +80,10 @@ const CourseDescription = ({ user }) => {
       );
   
       if (data.success && data.checkoutUrl) {
+        // Store course ID in session storage for post-payment handling
+        sessionStorage.setItem('lastPurchasedCourseId', params.id);
+        // Store the correct return URL in session storage
+        sessionStorage.setItem('payment_return_url', return_url);
         // Redirect to Chapa checkout page
         window.location.href = data.checkoutUrl;
       } else {
@@ -101,9 +123,12 @@ const CourseDescription = ({ user }) => {
             <div className="course-description">
               <div className="course-header">
                 <img
-                  src={`${server}/uploads/lectures/${course.image}`}
+                  src={getImageUrl(course.image)}
                   alt={course.title}
                   className="course-image"
+                  onError={(e) => {
+                    e.target.src = '/placeholder-course.jpg';
+                  }}
                 />
                 <div className="course-info">
                   <h2>{course.title}</h2>
@@ -114,7 +139,7 @@ const CourseDescription = ({ user }) => {
 
               <p>{course.description}</p>
 
-              <p>Let's get started with course At ETB{course.price}</p>
+              <p>Let's get started with course by ETB {course.price}</p>
 
               {user && user.subscription && user.subscription.includes(course._id) ? (
                 <button

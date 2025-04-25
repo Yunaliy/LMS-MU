@@ -1,5 +1,5 @@
 import express from "express";
-import { auth } from "../middlewares/auth.js";
+import { isAuth } from "../middlewares/isAuth.js";
 import {
   generateCertificate,
   getCertificate,
@@ -8,13 +8,13 @@ import {
 
 const router = express.Router();
 
-// Generate certificate for a student
-router.post("/course/:courseId/generate", auth, generateCertificate);
+// Get certificate (view/download)
+router.get("/:courseId", isAuth, getCertificate);
 
-// Get student's certificate
-router.get("/course/:courseId", auth, getCertificate);
+// Generate certificate
+router.post("/generate/:courseId", isAuth, generateCertificate);
 
-// Verify certificate (public endpoint)
+// Verify certificate
 router.get("/verify/:certificateId", verifyCertificate);
 
 export default router; 

@@ -5,10 +5,6 @@ const schema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  description: {
-    type: String,
-    required: true,
-  },
   videoSource: {
     type: String,
     enum: ['local', 'youtube'],

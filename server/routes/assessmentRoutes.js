@@ -4,7 +4,8 @@ import {
   createAssessment,
   getAssessment,
   submitAssessment,
-  getAssessmentStatus
+  getAssessmentStatus,
+  updateAssessment
 } from "../controllers/assessmentController.js";
 
 const router = express.Router();
@@ -14,6 +15,9 @@ router.post("/course/:courseId", auth, createAssessment);
 
 // Get assessment
 router.get("/course/:courseId", auth, getAssessment);
+
+// Update assessment (admin only)
+router.put("/course/:courseId", auth, updateAssessment);
 
 // Submit assessment
 router.post("/course/:courseId/submit", auth, submitAssessment);

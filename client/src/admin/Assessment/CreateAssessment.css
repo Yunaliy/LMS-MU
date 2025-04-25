@@ -1,0 +1,276 @@
+.create-assessment-form {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: 2rem;
+  margin: 1rem;
+}
+
+.form-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.form-header h3 {
+  margin: 0;
+  color: #333;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  color: #666;
+  cursor: pointer;
+  padding: 0.5rem;
+}
+
+.form-group {
+  margin-bottom: 1.5rem;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: #333;
+  font-weight: 500;
+}
+
+.form-group input[type="text"],
+.form-group input[type="number"],
+.form-group textarea {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 1rem;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.questions-section {
+  margin-top: 2rem;
+}
+
+.question-item {
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.question-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.question-header h5 {
+  margin: 0;
+  color: #333;
+}
+
+.remove-question-btn {
+  background: none;
+  border: none;
+  color: #dc3545;
+  cursor: pointer;
+  padding: 0.5rem;
+}
+
+.options-grid {
+  display: grid;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.option-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.option-item input[type="text"] {
+  flex: 1;
+  min-width: 300px;
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.correct-answer {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  white-space: nowrap;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 2rem;
+  padding-top: 1rem;
+  border-top: 1px solid #eee;
+}
+
+.right-actions {
+  display: flex;
+  gap: 1rem;
+}
+
+.add-question-btn,
+.cancel-btn,
+.submit-btn,
+.edit-btn,
+.delete-btn {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.2s;
+}
+
+.add-question-btn {
+  background-color: #e8eaf6;
+  color: #1a237e;
+}
+
+.cancel-btn {
+  background-color: #f5f5f5;
+  color: #666;
+}
+
+.submit-btn,
+.edit-btn {
+  background-color: #e8eaf6;
+  color: #1a237e;
+}
+
+.delete-btn {
+  background-color: #ffebee;
+  color: #c62828;
+}
+
+.add-question-btn:hover,
+.submit-btn:hover,
+.edit-btn:hover {
+  background-color: #c5cae9;
+}
+
+.cancel-btn:hover {
+  background-color: #e0e0e0;
+}
+
+.delete-btn:hover {
+  background-color: #ffcdd2;
+}
+
+/* Read-only view styles */
+.assessment-view {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: 2rem;
+  margin: 1rem;
+  position: relative;
+  padding-top: 4rem;
+}
+
+.assessment-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.assessment-title {
+  margin: 0;
+  color: #333;
+}
+
+.assessment-actions {
+  display: flex;
+  gap: 1rem;
+}
+
+.assessment-info {
+  margin-bottom: 2rem;
+}
+
+.assessment-info p {
+  margin: 0.5rem 0;
+  color: #666;
+}
+
+.question-list {
+  list-style: none;
+  padding: 0;
+}
+
+.question-view {
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.options-list {
+  list-style: none;
+  padding: 0;
+  margin: 1rem 0;
+}
+
+.option-view {
+  padding: 0.5rem;
+  margin: 0.5rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.correct-option {
+  color: #2e7d32;
+  font-weight: 500;
+}
+
+.back-button {
+  background: none;
+  border: none;
+  color: #666;
+  font-size: 1.2rem;
+  padding: 0.5rem;
+  cursor: pointer;
+  transition: color 0.2s;
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+}
+
+.back-button:hover {
+  color: #1a237e;
+}
+
+.assessment-title-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.assessment-subtitle {
+  color: #666;
+  font-size: 0.9rem;
+  margin: 0;
+} 
