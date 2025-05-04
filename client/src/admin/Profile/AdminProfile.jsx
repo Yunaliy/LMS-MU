@@ -72,7 +72,7 @@ const AdminProfile = () => {
         borderRadius: '8px',
         boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
       }}>
-        <h2 style={{ marginBottom: '2rem', color: '#1a237e' }}>Edit Profile</h2>
+        <h2 style={{ marginBottom: '2rem', color: 'var(--primary-dark)' }}>Edit Profile</h2>
         
         <form onSubmit={handleSubmit}>
           <div style={{ marginBottom: '2rem' }}>
@@ -124,8 +124,8 @@ const AdminProfile = () => {
                 style={{
                   display: 'inline-block',
                   padding: '0.5rem 1rem',
-                  backgroundColor: '#e8eaf6',
-                  color: '#1a237e',
+                  backgroundColor: 'var(--secondary-color)',
+                  color: "white",
                   borderRadius: '4px',
                   cursor: 'pointer'
                 }}
@@ -166,9 +166,9 @@ const AdminProfile = () => {
             type="submit"
             disabled={loading}
             style={{
-              width: '100%',
+              width: '30%',
               padding: '0.75rem',
-              backgroundColor: '#1a237e',
+              backgroundColor: 'var(--primary-dark)',
               color: 'white',
               border: 'none',
               borderRadius: '4px',

@@ -6,6 +6,8 @@ import TryCatch from '../middlewares/TryCatch.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import fs from 'fs';
+import Course from '../models/Course.js';
+import { Progress } from '../models/Progress.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -305,4 +307,98 @@ export const resetPassword = TryCatch(async (req, res) => {
       message: 'Failed to reset password. Please try again.',
     });
   }
+});
+
+export const getUserDetails = TryCatch(async (req, res) => {
+  const { userId } = req.params;
+
+  const user = await User.findById(userId)
+    .select('-password')
+    .lean();
+
+  if (!user) {
+    return res.status(404).json({
+      success: false,
+      message: 'User not found'
+    });
+  }
+
+  // Get user's course progress and details
+  const userWithCourses = {
+    ...user,
+    subscription: await Promise.all((user.subscription || []).map(async (courseId) => {
+      try {
+        // Find the course in the database
+        const course = await Course.findById(courseId).select('title').lean();
+        
+        // Get progress for this course
+        const progress = await Progress.findOne({
+          userId: userId,
+          courseId: courseId
+        }).lean();
+
+        return {
+          _id: courseId,
+          title: course?.title || 'Course not found',
+          progress: progress?.progress || 0,
+          completed: progress?.completed || false,
+          enrolledDate: progress?.createdAt || null
+        };
+      } catch (error) {
+        console.error(`Error fetching details for course ${courseId}:`, error);
+        return {
+          _id: courseId,
+          title: 'Error fetching course',
+          progress: 0,
+          completed: false,
+          enrolledDate: null
+        };
+      }
+    }))
+  };
+
+  res.status(200).json({
+    success: true,
+    user: userWithCourses
+  });
+});
+
+export const updateUserRole = TryCatch(async (req, res) => {
+  const { userId } = req.params;
+  const { role } = req.body;
+
+  if (!['user', 'admin'].includes(role)) {
+    return res.status(400).json({
+      success: false,
+      message: 'Invalid role specified'
+    });
+  }
+
+  const user = await User.findById(userId);
+  
+  if (!user) {
+    return res.status(404).json({
+      success: false,
+      message: 'User not found'
+    });
+  }
+
+  user.role = role;
+  await user.save();
+
+  res.status(200).json({
+    success: true,
+    message: `User role updated to ${role} successfully`
+  });
+});
+
+export const getAllUsers = TryCatch(async (req, res) => {
+  const users = await User.find({ _id: { $ne: req.user._id } })
+    .select('-password')
+    .lean();
+
+  res.status(200).json({
+    success: true,
+    users
+  });
 });

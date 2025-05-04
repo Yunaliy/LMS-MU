@@ -40,20 +40,29 @@
 .action-buttons {
   display: flex;
   gap: 0.5rem;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  justify-content: flex-start;
 }
-
+/* .edit-btn{
+  padding: 0.6rem 1rem;
+  color: #1565c0;
+} */
 .manage-btn,
 .assessment-btn,
 .edit-btn,
 .delete-btn {
-  padding: 0.5rem 1rem;
+  padding: 0.4rem 0.8rem;
   border: none;
   border-radius: 4px;
   cursor: pointer;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   transition: all 0.2s;
   white-space: nowrap;
+  min-width: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
 }
 
 .manage-btn {
@@ -85,11 +94,13 @@
 }
 
 .edit-btn:hover {
-  background-color: #ffe0b2;
+  background-color: var(--secondary-color);
+  color: white;
 }
 
 .delete-btn:hover {
-  background-color: #ffcdd2;
+  background-color: #f0acb2;
+  color: white;
 }
 
 .delete-btn:disabled {

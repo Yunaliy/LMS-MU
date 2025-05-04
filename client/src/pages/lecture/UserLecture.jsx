@@ -10,8 +10,10 @@ import { FaFilePdf, FaFileWord, FaFilePowerpoint, FaFileAudio, FaPlay, FaDownloa
 import YouTube from 'react-youtube';
 import LectureHeader from "../../components/header/LectureHeader";
 import confetti from 'canvas-confetti';
+import { UserData } from "../../context/UserContext";
 
 const UserLecture = ({ initialLectureId, isAdmin }) => {
+  const { user } = UserData();
   const [lectures, setLectures] = useState([]);
   const [lecture, setLecture] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -199,22 +201,30 @@ const UserLecture = ({ initialLectureId, isAdmin }) => {
   };
 
   const handleLectureCompletion = async (lectureId) => {
-    if (!lectureId) return;
+    try {
+      const response = await axios.post(
+        `${server}/api/user/progress`,
+        {
+          userId: user._id,
+          courseId: params.id,
+          lectureId: lectureId
+        },
+        {
+          headers: {
+            token: localStorage.getItem("token")
+          }
+        }
+      );
 
-    const alreadyCompleted = progress[0]?.completedLectures?.includes(lectureId) || false;
-
-    if (!alreadyCompleted) {
-      try {
-        await axios.post(
-          `${server}/api/user/progress?course=${params.id}&lectureId=${lectureId}`,
-          {},
-          { headers: { token: localStorage.getItem("token") } }
-        );
-        await fetchProgress();
-      } catch (error) {
-        console.error("Error updating progress:", error);
-        toast.error("Failed to update progress");
+      if (response.data.success) {
+        setProgress(response.data.progress);
+        setIsCompleted(true);
+        toast.success('Lecture marked as complete!');
+        await fetchProgress(); // Refresh progress data
       }
+    } catch (error) {
+      console.error('Error updating progress:', error);
+      toast.error('Failed to update progress. Please try again.');
     }
   };
 
@@ -232,7 +242,6 @@ const UserLecture = ({ initialLectureId, isAdmin }) => {
     try {
       setLecLoading(true);
       await fetchLecture(selectedLectureId);
-      navigate(`/lectures/${params.id}?lectureId=${selectedLectureId}`, { replace: true });
       setLecLoading(false);
     } catch (error) {
       console.error("Error loading lecture:", error);
@@ -244,163 +253,61 @@ const UserLecture = ({ initialLectureId, isAdmin }) => {
   const renderFilePreview = () => {
     if (!lecture) return null;
 
-    const getFileUrl = (filePath) => {
-      const cleanPath = filePath
-        .split('\\')
-        .join('/')
-        .replace(/^\/+/, '')
-        .replace(/^uploads\/?/, '');
-      
-      return `${server}/uploads/${cleanPath}`;
-    };
-
-    const getFileIcon = (fileType) => {
-      switch (fileType.toLowerCase()) {
-        case 'pdf':
-          return <FaFilePdf />;
-        case 'doc':
-        case 'docx':
-          return <FaFileWord />;
-        case 'ppt':
-        case 'pptx':
-          return <FaFilePowerpoint />;
-        case 'mp3':
-        case 'wav':
-          return <FaFileAudio />;
-        default:
-          return <FaPlay />;
-      }
-    };
-
-    const getFileType = (fileName) => {
-      return fileName.split('.').pop().toLowerCase();
-    };
-
-    const handleDownload = async () => {
-      try {
-        const response = await axios.get(getFileUrl(lecture.video.url), {
-          responseType: 'blob',
-          headers: {
-            token: localStorage.getItem("token"),
-          },
-        });
-        
-        const url = window.URL.createObjectURL(new Blob([response.data]));
-        const link = document.createElement('a');
-        link.href = url;
-        link.setAttribute('download', lecture.video.url.split('/').pop());
-        document.body.appendChild(link);
-        link.click();
-        link.remove();
-        window.URL.revokeObjectURL(url);
-      } catch (error) {
-        console.error('Download error:', error);
-        toast.error('Failed to download file');
-      }
-    };
-
-    if (lecture.video.source === 'youtube') {
+    if (lecture.videoSource === 'youtube' && lecture.youtubeVideoId) {
       return (
         <div className="video-container">
           <YouTube
-            videoId={lecture.video.url}
+            videoId={lecture.youtubeVideoId}
+            className="preview-video"
             opts={{
-              height: '100%',
-              width: '100%',
               playerVars: {
                 autoplay: 0,
-              },
+                controls: 1,
+                modestbranding: 1,
+                rel: 0
+              }
             }}
             onEnd={() => handleLectureCompletion(lecture._id)}
           />
         </div>
       );
-    } else {
-      const fileType = getFileType(lecture.video.url);
-      const fileUrl = getFileUrl(lecture.video.url);
-      const isVideo = ['mp4', 'webm'].includes(fileType);
-      const isAudio = ['mp3', 'wav'].includes(fileType);
-      const isPDF = fileType === 'pdf';
-      
+    } else if (lecture.fileUrl) {
       return (
-        <div className="file-preview-container">
-          {isVideo && (
-            <video
-              controls
-              className="video-player"
-              onEnded={() => handleLectureCompletion(lecture._id)}
-            >
-              <source src={fileUrl} type={`video/${fileType}`} />
-              Your browser does not support the video tag.
-            </video>
-          )}
-          
-          {isAudio && (
-            <div className="audio-player-container">
-              <audio
-                controls
-                className="audio-player"
-                onEnded={() => handleLectureCompletion(lecture._id)}
-              >
-                <source src={fileUrl} type={`audio/${fileType}`} />
-                Your browser does not support the audio tag.
-              </audio>
-            </div>
-          )}
-          
-          {isPDF && (
-            <iframe
-              src={fileUrl}
-              className="pdf-viewer"
-              title="PDF Viewer"
-            />
-          )}
-          
-          {!isVideo && !isAudio && !isPDF && (
-            <div className="file-info">
-              <div className="file-icon">{getFileIcon(fileType)}</div>
-              <div className="file-name">{lecture.video.url.split('/').pop()}</div>
-            </div>
-          )}
-          
-          <div className="file-actions">
-            <button onClick={handleDownload} className="download-btn">
-              <FaDownload /> Download
-            </button>
-            {(isPDF || !isVideo && !isAudio) && (
-              <a
-                href={fileUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="view-btn"
-              >
-                <FaExpand /> View Full Screen
-              </a>
-            )}
-          </div>
+        <div className="video-container">
+          <video
+            className="preview-video"
+            controls
+            src={`${server}/uploads/${lecture.fileUrl}`}
+            onEnded={() => handleLectureCompletion(lecture._id)}
+          />
         </div>
       );
     }
+
+    return null;
   };
 
   if (loading) return <Loading />;
 
   return (
     <div className="lecture-container">
-      <LectureHeader title={courseTitle} onBack={handleBack} />
+      <LectureHeader 
+        title={courseTitle} 
+        progressPercentage={progressPercentage} 
+        onBack={handleBack}
+      />
       
       <div className="lecture-content">
-        <button className="toggle-panel-btn" onClick={togglePanel}>
+        <button 
+          className={`toggle-panel-btn ${isPanelOpen ? 'open' : ''}`} 
+          onClick={togglePanel}
+        >
           {isPanelOpen ? <FaTimes /> : <FaBars />}
         </button>
 
         <div className={`lecture-panel ${isPanelOpen ? 'open' : ''}`}>
           <div className="panel-header">
             <h3>Course Content</h3>
-            <div className="progress-info">
-              <FaGraduationCap />
-              <span>{progressPercentage}% Complete</span>
-            </div>
           </div>
 
           <div className="lecture-list">
@@ -414,7 +321,11 @@ const UserLecture = ({ initialLectureId, isAdmin }) => {
                   <span className="lecture-number">{index + 1}</span>
                   <div className="lecture-details">
                     <h4>{item.title}</h4>
-                    {item.isFreePreview && <span className="free-preview">Free Preview</span>}
+                    {item.duration && (
+                      <span className="lecture-duration">
+                        {item.duration}
+                      </span>
+                    )}
                   </div>
                 </div>
                 {progress[0]?.completedLectures?.includes(item._id) && (
@@ -432,22 +343,19 @@ const UserLecture = ({ initialLectureId, isAdmin }) => {
             <Loading />
           ) : lecture ? (
             <>
-              <div className="lecture-header">
-                <h2>{lecture.title}</h2>
-                {isCompleted ? (
-                  <div className="completion-badge">
-                    <FaCheck /> Completed
-                  </div>
-                ) : (
-                  <button
-                    className="mark-complete-btn"
-                    onClick={() => handleLectureCompletion(lecture._id)}
-                  >
-                    Mark as Complete
-                  </button>
-                )}
-              </div>
               {renderFilePreview()}
+              <div className="lecture-title-container">
+                <h2 className="lecture-title">{lecture.title}</h2>
+                <div className="completion-checkbox">
+                  <input
+                    type="checkbox"
+                    id="lecture-complete"
+                    checked={isCompleted}
+                    onChange={() => handleLectureCompletion(lecture._id)}
+                  />
+                  <label htmlFor="lecture-complete">Mark as complete</label>
+                </div>
+              </div>
             </>
           ) : (
             <div className="no-lecture-selected">

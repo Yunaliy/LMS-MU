@@ -9,7 +9,7 @@
     url('/islamic-pattern.png') center/cover;
   
   color: var(--text-light);
-  padding: var(--spacing-sm) 0;
+  padding: 1rem 2rem;
   position: sticky;
   top: 0;
   z-index: 1000;
@@ -17,59 +17,53 @@
   transition: all 0.3s ease;
 }
 
-.header-content {
+.header-container {
+  max-width: 1200px;
+  margin: 0 auto;
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  gap: 2rem;
 }
 
 .logo {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0.5rem 1rem;
+  flex: 0 0 200px; /* Fixed width for logo */
+  text-decoration: none;
 }
 
-.logo-link {
-  display: flex;
-  align-items: center;
-}
-
-.logo img {
+.logo-image {
   height: 60px;
   width: auto;
   display: block;
- 
 }
 
 .main-nav {
+  flex: 1;
   display: flex;
   align-items: center;
-  gap: var(--spacing-md);
-  margin-left: auto;
+  justify-content: space-between;
 }
 
 .nav-links {
+  flex: 1;
   display: flex;
   align-items: center;
-  gap: var(--spacing-md);
-  margin-right: 2rem;
+  justify-content: flex-end;
+  gap: 2rem;
+  margin-right: 3rem; /* Add space between nav links and user section */
 }
 
 .nav-link {
   color: var(--text-light);
   text-decoration: none;
   font-weight: 500;
-  padding: var(--spacing-xs) var(--spacing-sm);
+  padding: 0.5rem 1rem;
   border-radius: var(--border-radius-sm);
   transition: all 0.3s ease;
   position: relative;
-  padding-bottom: 3px;
 }
 
 .nav-link:hover {
   color: var(--primary-color);
-  background-color: rgba(255, 255, 255, 0.1);
 }
 
 .nav-link.active {
@@ -85,7 +79,6 @@
   height: 2px;
   background-color: var(--primary-color);
   transform: scaleX(1);
-  transition: transform 0.3s ease;
 }
 
 .nav-link:not(.active)::after {
@@ -104,6 +97,13 @@
   transform: scaleX(1);
 }
 
+.user-section {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
 .auth-buttons {
   display: flex;
   gap: 1rem;
@@ -112,8 +112,7 @@
 
 .auth-button {
   text-decoration: none;
-  padding: 0.4rem 1.5rem;
-  margin-top: 1rem;
+  padding: 0.5rem 1.3rem;
   border-radius: 10px;
   font-weight: 500;
   transition: all 0.3s ease;
@@ -127,8 +126,7 @@
 }
 
 .login-button:hover {
-  background-color: #f59f0b6d;
-  /* color: var(--secondary-dark); */
+  background-color: rgba(245, 159, 11, 0.233);
 }
 
 .signup-button {
@@ -138,14 +136,6 @@
 
 .signup-button:hover {
   background-color: var(--primary-color);
-  /* border-color: var(--primary-dark); */
-  /* color: var(--secondary-dark); */
-}
-
-.user-section {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
 }
 
 .profile-link {
@@ -211,40 +201,46 @@
 
 /* Responsive Design */
 @media (max-width: 768px) {
-  .header-content {
-    flex-direction: column;
-    gap: var(--spacing-md);
+  .main-header {
+    padding: 1rem;
   }
-  
-  .main-nav {
-    width: 100%;
-    flex-direction: column;
-    align-items: center;
+
+  .header-container {
+    gap: 1rem;
+  }
+
+  .logo {
+    flex: 0 0 150px; /* Smaller logo on tablets */
   }
 
   .nav-links {
-    margin-right: 0;
-    margin-bottom: 1rem;
+    gap: 1rem;
+    margin-right: 2rem; /* Smaller margin on tablets */
   }
-  
-  .auth-buttons,
-  .user-section {
-    margin: 0.5rem 0;
+
+  .auth-button {
+    padding: 0.4rem 1rem;
   }
 }
 
 @media (max-width: 576px) {
+  .header-container {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .logo {
+    flex: 0 0 auto;
+  }
+
   .nav-links {
-    flex-wrap: wrap;
+    width: 100%;
     justify-content: center;
+    margin-right: 0; /* Remove margin on mobile */
   }
-  
-  .nav-link {
-    font-size: 0.9rem;
-  }
-  
-  .auth-button {
-    padding: 0.4rem 1.2rem;
-    font-size: 0.9rem;
+
+  .user-section {
+    width: 100%;
+    justify-content: center;
   }
 }

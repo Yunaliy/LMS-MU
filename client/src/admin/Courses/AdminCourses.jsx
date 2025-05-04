@@ -25,7 +25,7 @@ const AdminCourses = () => {
       <div className="admin-courses-container">
         <div className="admin-courses-header">
           <div className="header-content">
-            <h2>Course Management</h2>
+            <h2 className='course-manage-title'>Course Management</h2>
             <Link to="/admin/course/new" className="add-course-btn">
               <FaPlus /> Add New Course
             </Link>

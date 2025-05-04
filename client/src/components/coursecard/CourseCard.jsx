@@ -37,7 +37,7 @@ const CourseCard = ({ course }) => {
       toast.error('Unable to access course');
       return;
     }
-    navigate(`/course/${courseId}`);
+    navigate(`/course/${courseId}/details`);
   };
 
   // Early return if no course or course ID

@@ -32,6 +32,7 @@ import Certificate from "./pages/certificate/Certificate";
 import AdminRoute from "./components/AdminRoute";
 import AdminProfile from './admin/Profile/AdminProfile';
 import AdminLectureManager from './admin/Lectures/AdminLectureManager';
+import CourseDetailedDescription from "./pages/coursedescription/CourseDetailedDescription";
 
 // Wrapper component to conditionally render Header and Footer
 const Layout = ({ children }) => {
@@ -113,8 +114,12 @@ const App = () => {
               element={isAuth ? <Account user={user} /> : <Login />}
             />
             <Route
+              path="/course/:id/details"
+              element={<CourseDetailedDescription />}
+            />
+            <Route
               path="/course/:id"
-              element={<CourseDescription user={user} />}
+              element={<Navigate to="/course/:id/details" replace />}
             />
             <Route
               path="/payment-success"

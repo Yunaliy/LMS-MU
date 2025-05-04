@@ -5,19 +5,24 @@ import {
   addLecture,
   updateLecture,
   deleteLecture,
-  getLecture,
-  getAllLectures,
+  fetchLecture,
+  fetchLectures,
 } from "../controllers/lecture.js";
 
 const router = express.Router();
 
 // Admin routes (protected)
 router.post("/course/:id/lecture", isAuth, isAdmin, upload.single('file'), addLecture);
-router.put("/course/:id/lecture", isAuth, isAdmin, upload.single('file'), updateLecture);
+router.put("/lecture/:id", isAuth, isAdmin, upload.single('file'), updateLecture);
 router.delete("/lecture/:id", isAuth, isAdmin, deleteLecture);
 
-// Public routes (still requires authentication)
-router.get("/course/:id/lectures", isAuth, getAllLectures);
-router.get("/lecture/:id", isAuth, getLecture);
+// Lecture routes (require authentication)
+router.get("/lectures/:id", isAuth, fetchLectures);
+router.get("/lecture/:id", isAuth, fetchLecture);
+
+// Add a test route for debugging
+router.get("/test", (req, res) => {
+  res.json({ message: "Lecture routes are working" });
+});
 
 export default router; 

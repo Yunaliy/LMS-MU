@@ -9,6 +9,16 @@ import { User } from "./models/User.js";
 import path from "path";
 import { fileURLToPath } from "url";
 import fs from "fs";
+import courseRoute from './routes/course.js';
+import userRoute from './routes/user.js';
+import paymentRoute from './routes/payment.js';
+import certificateRoute from './routes/certificateRoutes.js';
+import { ErrorMiddleware } from './middlewares/Error.js';
+import cookieParser from 'cookie-parser';
+import lectureRoute from "./routes/lecture.js";
+import adminRoute from "./routes/admin.js";
+import assessmentRoute from "./routes/assessmentRoutes.js";
+import notificationRoute from "./routes/notification.js"
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -21,9 +31,10 @@ app.use(express.json());
 app.use(cors({
   origin: ['http://localhost:5173', 'http://localhost:5174'],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'token'], // Add 'Authorization' here
+  allowedHeaders: ['Content-Type', 'Authorization', 'token'],
   credentials: true
 }));
+app.use(cookieParser());
 
 // Add explicit OPTIONS handling for preflight requests
 app.options('*', cors());
@@ -362,30 +373,18 @@ app.post("/api/payment/webhook",
   }
 );
 
-// Import other routes
-import userRoutes from "./routes/user.js";
-import courseRoutes from "./routes/course.js";
-import adminRoutes from "./routes/admin.js";
-import assessmentRoutes from "./routes/assessmentRoutes.js";
-import certificateRoutes from "./routes/certificateRoutes.js";
-import notificationRoutes from "./routes/notification.js";
+// Routes
+app.use("/api", courseRoute);
+app.use("/api", userRoute);
+app.use("/api", paymentRoute);
+app.use("/api", adminRoute);
+app.use("/api", lectureRoute);
+app.use("/api/assessment", assessmentRoute);
+app.use("/api/certificate", certificateRoute);
+app.use("/api", notificationRoute);
 
-// Use other routes
-app.use("/api", userRoutes);
-app.use("/api", courseRoutes);
-app.use("/api", adminRoutes);
-app.use("/api/assessment", assessmentRoutes);
-app.use("/api/certificate", certificateRoutes);
-app.use("/api", notificationRoutes);
-
-// Error handling middleware
-app.use((err, req, res, next) => {
-  console.error("Server error:", err);
-  res.status(500).json({
-    success: false,
-    message: "Internal server error"
-  });
-});
+// Error handling
+app.use(ErrorMiddleware);
 
 // Start server
 app.listen(port, () => {

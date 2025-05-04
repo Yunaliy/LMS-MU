@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "./header.css";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import 'bootstrap/dist/css/bootstrap.min.css';
@@ -8,10 +8,15 @@ import { server } from "../../config";
 import Notification from "../Notification";
 
 const Header = () => {
-  const { user, isAuth } = UserData(); // Get both user and isAuth from context
+  const { user, isAuth } = UserData();
   const [showTooltip, setShowTooltip] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
+
+  // Add scroll to top effect when route changes
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [location.pathname]);
 
   const handleImageError = (e) => {
     e.target.onerror = null;
@@ -30,87 +35,103 @@ const Header = () => {
     return location.pathname.startsWith(path);
   };
 
+  // Function to handle navigation and ensure scroll to top
+  const handleNavigation = (e, path) => {
+    e.preventDefault();
+    window.scrollTo(0, 0);
+    navigate(path);
+  };
+
   return (
     <header className="main-header">
-      <div className="container">
-        <div className="header-content">
-          <div className="logo">
-            <Link to="/" className="logo-link">
-              <img
-                src="/logo3.png"
-                alt="Medinatul Uloom Logo"
-                className="img-fluid"
-                style={{ maxWidth: "200px" }}
-              />
-            </Link>
-          </div>
+      <div className="header-container">
+        <Link 
+          to="/" 
+          className="logo"
+          onClick={(e) => handleNavigation(e, "/")}
+        >
+          <img
+            src="/logo3.png"
+            alt="Medinatul Uloom Logo"
+            className="logo-image"
+          />
+        </Link>
 
-          <nav className="main-nav">
-            <div className="nav-links">
-              <Link 
-                to="/" 
-                className={`nav-link ${isActivePath('/') ? 'active' : ''}`}
-              >
-                Home
-              </Link>
-              <Link 
-                to="/courses" 
-                className={`nav-link ${isActivePath('/courses') ? 'active' : ''}`}
-              >
-                Courses
-              </Link>
-              <Link 
-                to="/about" 
-                className={`nav-link ${isActivePath('/about') ? 'active' : ''}`}
-              >
-                About
-              </Link>
-            </div>
+        <div className="nav-links">
+          <Link 
+            to="/" 
+            className={`nav-link ${isActivePath('/') ? 'active' : ''}`}
+            onClick={(e) => handleNavigation(e, "/")}
+          >
+            Home
+          </Link>
+          <Link 
+            to="/courses" 
+            className={`nav-link ${isActivePath('/courses') ? 'active' : ''}`}
+            onClick={(e) => handleNavigation(e, "/courses")}
+          >
+            Courses
+          </Link>
+          <Link 
+            to="/about" 
+            className={`nav-link ${isActivePath('/about') ? 'active' : ''}`}
+            onClick={(e) => handleNavigation(e, "/about")}
+          >
+            About
+          </Link>
+        </div>
 
-            <div className="user-section">
-              {isAuth ? (
-                <>
-                  <Link 
-                    to="/account" 
-                    className="profile-link"
-                    onMouseEnter={() => setShowTooltip(true)}
-                    onMouseLeave={() => setShowTooltip(false)}
-                  >
-                    <div className="header-avatar">
-                      {user?.image ? (
-                        <img 
-                          src={`${server}/uploads/${user.image.replace(/\\/g, '/')}`}
-                          alt={user.name}
-                          onError={handleImageError}
-                        />
-                      ) : (
-                        <MdAccountCircle 
-                          size={32} 
-                          color="#757575"
-                        />
-                      )}
-                    </div>
-                    {showTooltip && (
-                      <div className="profile-tooltip">
-                        {user?.name}
-                        <div className="tooltip-arrow"></div>
-                      </div>
-                    )}
-                  </Link>
-                  <Notification user={user} />
-                </>
-              ) : (
-                <div className="auth-buttons">
-                  <Link to="/login" className="auth-button login-button">
-                    Login
-                  </Link>
-                  <Link to="/register" className="auth-button signup-button">
-                    Sign Up
-                  </Link>
+        <div className="user-section">
+          {isAuth ? (
+            <>
+              <Link 
+                to="/account" 
+                className="profile-link"
+                onClick={(e) => handleNavigation(e, "/account")}
+                onMouseEnter={() => setShowTooltip(true)}
+                onMouseLeave={() => setShowTooltip(false)}
+              >
+                <div className="header-avatar">
+                  {user?.image ? (
+                    <img 
+                      src={`${server}/uploads/${user.image.replace(/\\/g, '/')}`}
+                      alt={user.name}
+                      onError={handleImageError}
+                    />
+                  ) : (
+                    <MdAccountCircle 
+                      size={32} 
+                      color="#757575"
+                    />
+                  )}
                 </div>
-              )}
+                {showTooltip && (
+                  <div className="profile-tooltip">
+                    {user?.name}
+                    <div className="tooltip-arrow"></div>
+                  </div>
+                )}
+              </Link>
+              <Notification user={user} />
+            </>
+          ) : (
+            <div className="auth-buttons">
+              <Link 
+                to="/login" 
+                className="auth-button login-button"
+                onClick={(e) => handleNavigation(e, "/login")}
+              >
+                Login
+              </Link>
+              <Link 
+                to="/register" 
+                className="auth-button signup-button"
+                onClick={(e) => handleNavigation(e, "/register")}
+              >
+                Sign Up
+              </Link>
             </div>
-          </nav>
+          )}
         </div>
       </div>
     </header>

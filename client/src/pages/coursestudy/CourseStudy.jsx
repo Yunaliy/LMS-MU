@@ -454,7 +454,10 @@ const CourseStudy = () => {
         />
         <div className="course-info">
           <h2>{course.title}</h2>
-          <p className="description">{course.description}</p>
+          <div 
+            className="description"
+            dangerouslySetInnerHTML={{ __html: course.description }}
+          />
           <div className="meta-info">
             <span>
               <i className="fas fa-user"></i> {course.createdBy}

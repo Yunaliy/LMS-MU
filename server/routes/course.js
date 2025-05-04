@@ -2,27 +2,30 @@ import express from "express";
 import {
   getAllCourses,
   getSingleCourse,
-  fetchLectures,
-  fetchLecture,
   getMyCourses,
   checkout,
   paymentVerification,
-  addLecture,
-  updateLecture,
+  createCourse,
+  updateCourse,
+  deleteCourse
 } from "../controllers/course.js";
 import { isAuth, isAdmin } from "../middlewares/isAuth.js";
 import { upload } from "../middlewares/multer.js";
 
 const router = express.Router();
 
+// Public routes
 router.get("/course/all", getAllCourses);
 router.get("/course/:id", getSingleCourse);
-router.get("/lectures/:id", isAuth, fetchLectures);
-router.get("/lecture/:id", isAuth, fetchLecture);
+
+// User routes
 router.get("/mycourse", isAuth, getMyCourses);
 router.post("/course/checkout/:id", isAuth, checkout);
 router.post("/verification/:id", isAuth, paymentVerification);
-router.post("/course/:id", isAuth, isAdmin, upload.single('file'), addLecture);
-router.put("/lecture/:id", isAuth, isAdmin, upload.single('file'), updateLecture);
+
+// Admin routes
+router.post("/admin/course/new", isAuth, isAdmin, upload.single('image'), createCourse);
+router.put("/course/:id", isAuth, isAdmin, upload.single('image'), updateCourse);
+router.delete("/course/:id", isAuth, isAdmin, deleteCourse);
 
 export default router;

@@ -2,13 +2,13 @@ import TryCatch from "../middlewares/TryCatch.js";
 import { Courses } from "../models/Courses.js";
 import { Lecture } from "../models/Lecture.js";
 import { User } from "../models/User.js";
-import crypto from "crypto";
+// import crypto from "crypto";
 import { Payment } from "../models/Payment.js";
 import { Progress } from "../models/Progress.js";
 import fs from "fs";
 import { createNotification } from "./Notification.js";
 import path from "path";
-import fsPromises from "fs/promises";
+import { promises as fsPromises } from 'fs';
 
 export const getAllCourses = TryCatch(async (req, res) => {
   const courses = await Courses.find();
@@ -42,38 +42,6 @@ export const getSingleCourse = TryCatch(async (req, res) => {
   });
 });
 
-export const fetchLectures = TryCatch(async (req, res) => {
-  const lectures = await Lecture.find({ course: req.params.id });
-
-  const user = await User.findById(req.user._id);
-  if (user.role === "admin") {
-    return res.json({ lectures });
-  }
-
-  if (!user.subscription.includes(req.params.id))
-    return res.status(400).json({
-      message: "You have not subscribed to this course",
-    });
-
-  res.json({ lectures });
-});
-
-export const fetchLecture = TryCatch(async (req, res) => {
-  const lecture = await Lecture.findById(req.params.id);
-
-  const user = await User.findById(req.user._id);
-
-  if (user.role === "admin") {
-    return res.json({ lecture });
-  }
-
-  if (!user.subscription.includes(lecture.course))
-    return res.status(400).json({
-      message: "You have not subscribed to this course",
-    });
-
-  res.json({ lecture });
-});
 
 export const getMyCourses = TryCatch(async (req, res) => {
   try {
@@ -378,240 +346,131 @@ export const getYourProgress = TryCatch(async (req, res) => {
   });
 });
 
-export const addLecture = TryCatch(async (req, res) => {
+export const createCourse = TryCatch(async (req, res) => {
   try {
-    const courseId = req.params.id;
-    const { title,  videoSource, youtubeVideoId } = req.body;
-    const file = req.file;
+    const { title, description, price, duration, subtitle, category, createdBy } = req.body;
+    const image = req.file;
 
-    if (!courseId) {
-      if (file) await fs.promises.unlink(file.path);
+    // Validate required fields
+    if (!title || !description || !price || !duration) {
+      if (image) await fsPromises.unlink(image.path);
       return res.status(400).json({
         success: false,
-        message: "Course ID is required"
+        message: "Please provide all required fields"
       });
     }
 
-    // Verify course exists
+    // Create course data object
+    const courseData = {
+      title,
+      description,
+      price,
+      duration,
+      subtitle,
+      category,
+      createdBy: createdBy || req.user.name,
+      image: image ? image.filename : undefined
+    };
+
+    // Create the course
+    const course = await Courses.create(courseData);
+
+    res.status(201).json({
+      success: true,
+      message: "Course created successfully",
+      course
+    });
+  } catch (error) {
+    if (req.file) {
+      await fsPromises.unlink(req.file.path);
+    }
+    throw error;
+  }
+});
+
+export const updateCourse = TryCatch(async (req, res) => {
+  try {
+    const courseId = req.params.id;
+    const { title, description, price, duration, subtitle, category, createdBy } = req.body;
+    const image = req.file;
+
     const course = await Courses.findById(courseId);
     if (!course) {
-      if (file) await fs.promises.unlink(file.path);
+      if (image) await fsPromises.unlink(image.path);
       return res.status(404).json({
         success: false,
         message: "Course not found"
       });
     }
 
-    // Validate required fields based on video source
-    if (!title) {
-      if (file) await fs.promises.unlink(file.path);
-      return res.status(400).json({
-        success: false,
-        message: "Title is required"
-      });
+    // Update course fields
+    if (title) course.title = title;
+    if (description) course.description = description;
+    if (price) course.price = price;
+    if (duration) course.duration = duration;
+    if (subtitle) course.subtitle = subtitle;
+    if (category) course.category = category;
+    if (createdBy) course.createdBy = createdBy;
+
+    // Handle image update
+    if (image) {
+      // Delete old image if it exists
+      if (course.image) {
+        const oldImagePath = path.join(process.cwd(), 'uploads', course.image);
+        try {
+          await fsPromises.unlink(oldImagePath);
+        } catch (error) {
+          console.error('Error deleting old image:', error);
+        }
+      }
+      course.image = image.filename;
     }
 
-    if (videoSource === 'youtube') {
-      if (!youtubeVideoId) {
-        return res.status(400).json({
-          success: false,
-          message: "YouTube Video ID is required"
-        });
-      }
+    await course.save();
 
-      const lecture = await Lecture.create({
-        title,
-       
-        videoSource: 'youtube',
-        youtubeVideoId,
-        fileType: 'video',
-        course: courseId
-      });
-
-      // Create notification
-      try {
-        await createNotification(
-          "lecture",
-          "New Lecture Added",
-          `New lecture "${title}" has been added to the course "${course.title}"`,
-          lecture._id,
-          req.user._id
-        );
-      } catch (notificationError) {
-        console.error("Error creating notification:", notificationError);
-      }
-
-      return res.status(201).json({
-        success: true,
-        message: "Lecture added successfully",
-        lecture
-      });
-    } else {
-      // Handle local file upload
-      if (!file) {
-        return res.status(400).json({
-          success: false,
-          message: "File is required for local upload"
-        });
-      }
-
-      // Determine file type and folder
-      let fileType;
-      let folderPath;
-      if (file.mimetype.startsWith('video/')) {
-        fileType = 'video';
-        folderPath = 'lectures';
-      } else if (file.mimetype.startsWith('audio/')) {
-        fileType = 'audio';
-        folderPath = 'others';
-      } else if (file.mimetype === 'application/pdf') {
-        fileType = 'pdf';
-        folderPath = 'others';
-      } else {
-        fileType = 'other';
-        folderPath = 'others';
-      }
-
-      // Create the relative path for storage
-      const relativePath = `${folderPath}/${path.basename(file.path)}`;
-
-      const lecture = await Lecture.create({
-        title,
-        
-        file: relativePath,
-        fileType,
-        videoSource: 'local',
-        course: courseId
-      });
-
-      // Create notification
-      try {
-        await createNotification(
-          "lecture",
-          "New Lecture Added",
-          `New lecture "${title}" has been added to the course "${course.title}"`,
-          lecture._id,
-          req.user._id
-        );
-      } catch (notificationError) {
-        console.error("Error creating notification:", notificationError);
-      }
-
-      return res.status(201).json({
-        success: true,
-        message: "Lecture added successfully",
-        lecture
-      });
-    }
+    res.json({
+      success: true,
+      message: "Course updated successfully",
+      course
+    });
   } catch (error) {
     if (req.file) {
-      try {
-        await fs.promises.unlink(req.file.path);
-      } catch (unlinkError) {
-        console.error("Error deleting file:", unlinkError);
-      }
+      await fsPromises.unlink(req.file.path);
     }
     throw error;
   }
 });
 
-export const createCourse = async (req, res) => {
-  try {
-    // Create the course
-    const course = await Courses.create(req.body);
-
-    res.status(201).json({
-      success: true,
-      data: course,
-      message: 'Course created successfully'
-    });
-  } catch (error) {
-    console.error('Error creating course:', error);
-    res.status(500).json({
+export const deleteCourse = TryCatch(async (req, res) => {
+  const course = await Courses.findById(req.params.id);
+  
+  if (!course) {
+    return res.status(404).json({
       success: false,
-      message: 'Failed to create course'
+      message: "Course not found"
     });
   }
-};
 
-export const updateLecture = TryCatch(async (req, res) => {
-  const lectureId = req.params.id;
-  const { title,  videoSource, youtubeVideoId } = req.body;
-  const file = req.file;
-  let oldFilePath = null;
-
-  try {
-    const lecture = await Lecture.findById(lectureId);
-
-    if (!lecture) {
-      if (file) await fsPromises.unlink(file.path);
-      return res.status(404).json({ success: false, message: "Lecture not found" });
+  // Delete course image if it exists
+  if (course.image) {
+    const imagePath = path.join(process.cwd(), course.image);
+    try {
+      await fsPromises.unlink(imagePath);
+    } catch (error) {
+      console.error('Error deleting course image:', error);
     }
-
-    if (lecture.videoSource === 'local' && lecture.file) {
-       if (videoSource === 'youtube' || (videoSource === 'local' && file)) {
-          oldFilePath = path.join(process.cwd(), 'server', lecture.file);
-       }
-    }
-
-    lecture.title = title || lecture.title;
-    
-    lecture.videoSource = videoSource || lecture.videoSource;
-
-    if (lecture.videoSource === 'youtube') {
-      if (!youtubeVideoId) {
-         if (file) await fsPromises.unlink(file.path);
-         return res.status(400).json({ success: false, message: "YouTube Video ID is required for YouTube source" });
-      }
-      lecture.youtubeVideoId = youtubeVideoId;
-      lecture.file = undefined;
-      lecture.fileType = 'video';
-    } else if (lecture.videoSource === 'local') {
-      if (file) {
-        lecture.youtubeVideoId = undefined;
-
-        let fileType;
-        let folderPath;
-        if (file.mimetype.startsWith('video/')) {
-          fileType = 'video'; folderPath = 'uploads/lectures';
-        } else if (file.mimetype.startsWith('audio/')) {
-          fileType = 'audio'; folderPath = 'uploads/others';
-        } else if (file.mimetype === 'application/pdf') {
-          fileType = 'pdf'; folderPath = 'uploads/others';
-        } else {
-          fileType = 'other'; folderPath = 'uploads/others';
-        }
-        await fsPromises.mkdir(path.join(process.cwd(), 'server', folderPath), { recursive: true });
-        const relativePath = path.join(folderPath, path.basename(file.path)).replace(/\\/g, '/');
-
-        lecture.file = relativePath;
-        lecture.fileType = fileType;
-
-      } else if (!lecture.file) {
-         return res.status(400).json({ success: false, message: "File is required for local source" });
-      }
-    } else {
-       if (file) await fsPromises.unlink(file.path);
-       return res.status(400).json({ success: false, message: "Invalid video source specified" });
-    }
-
-    await lecture.save();
-
-    if (oldFilePath) {
-       try {
-          await fsPromises.unlink(oldFilePath);
-          console.log("Deleted old file:", oldFilePath);
-       } catch (unlinkError) {
-          console.error("Error deleting old file:", oldFilePath, unlinkError);
-       }
-    }
-
-    res.json({ success: true, message: "Lecture updated successfully", lecture });
-
-  } catch (error) {
-    if (file) {
-       try { await fsPromises.unlink(file.path); } catch (unlinkError) { console.error("Error deleting uploaded file on failure:", unlinkError); }
-    }
-    throw error;
   }
+
+  // Delete all lectures associated with this course
+  await Lecture.deleteMany({ course: course._id });
+
+  // Delete the course
+  await course.deleteOne();
+
+  res.json({
+    success: true,
+    message: "Course deleted successfully"
+  });
 });
+
+

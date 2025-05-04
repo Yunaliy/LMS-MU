@@ -2,20 +2,28 @@ import mongoose from "mongoose";
 
 const schema = new mongoose.Schema(
   {
-    course: {
+    courseId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Courses",
+      ref: "Course",
+      required: true
     },
-    completedLectures: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Lecture",
-      },
-    ],
-    user: {
+    userId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
+      required: true
     },
+    progress: {
+      type: Number,
+      default: 0
+    },
+    completed: {
+      type: Boolean,
+      default: false
+    },
+    completedLectures: [{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Course.lectures"
+    }]
   },
   {
     timestamps: true,

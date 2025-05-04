@@ -26,7 +26,7 @@
 
       h2 {
         font-size: 24px;
-        color: #8a4baf;
+        color: var(--primary-color);
         margin-bottom: 15px;
       }
 
@@ -71,12 +71,16 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: 20px;
+  width: 100%;
+  padding: 0 20px;
 }
 
-.header-content h2 {
+.course-manage-title {
   margin: 0;
-  color: #333;
+  color: var(--primary-dark);
   font-size: 24px;
+  font-weight: bold;
+  text-align: left;
 }
 
 .add-course-btn {
@@ -90,6 +94,8 @@
   border-radius: 4px;
   text-decoration: none;
   transition: background-color 0.3s ease;
+  white-space: nowrap;
+  margin-left: auto;
 }
 
 .add-course-btn:hover {

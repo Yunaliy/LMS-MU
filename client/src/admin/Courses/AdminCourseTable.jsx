@@ -4,6 +4,7 @@ import { server } from '../../config';
 import toast from 'react-hot-toast';
 import axios from 'axios';
 import ConfirmationDialog from '../../components/ConfirmationDialog';
+import { FaEdit, FaBook, FaClipboardList, FaTrash } from 'react-icons/fa';
 import './adminCourseTable.css';
 
 const AdminCourseTable = ({ courses, onCoursesUpdate }) => {
@@ -80,29 +81,29 @@ const AdminCourseTable = ({ courses, onCoursesUpdate }) => {
                 <td>
                   <div className="action-buttons">
                     <button
+                      onClick={() => handleEdit(course._id)}
+                      className="edit-btn"
+                    >
+                      <FaEdit /> Edit
+                    </button>
+                    <button
                       onClick={() => handleManage(course._id)}
                       className="manage-btn"
                     >
-                      Manage Lectures
+                      <FaBook /> Lectures
                     </button>
                     <button
                       onClick={() => handleAssessment(course._id)}
                       className="assessment-btn"
                     >
-                      Manage Assessment
-                    </button>
-                    <button
-                      onClick={() => handleEdit(course._id)}
-                      className="edit-btn"
-                    >
-                      Edit
+                      <FaClipboardList /> Assessment
                     </button>
                     <button
                       onClick={() => handleDeleteClick(course)}
                       className="delete-btn"
                       disabled={deletingCourseId === course._id}
                     >
-                      {deletingCourseId === course._id ? 'Deleting...' : 'Delete'}
+                      <FaTrash /> {deletingCourseId === course._id ? 'Deleting...' : 'Delete'}
                     </button>
                   </div>
                 </td>

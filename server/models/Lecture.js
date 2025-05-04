@@ -32,6 +32,10 @@ const schema = new mongoose.Schema({
     ref: "Courses",
     required: true,
   },
+  isPreview: {
+    type: Boolean,
+    default: false
+  },
   createdAt: {
     type: Date,
     default: Date.now,

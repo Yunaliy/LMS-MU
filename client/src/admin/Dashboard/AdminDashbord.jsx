@@ -33,24 +33,39 @@ const AdminDashboard = ({ user }) => {
     try {
       setStats(prev => ({ ...prev, loading: true, error: null }));
       
+      console.log("Fetching dashboard statistics...");
       const { data } = await axios.get(`${server}/api/stats`, {
         headers: {
           token: localStorage.getItem("token"),
         },
       });
 
+      console.log("Dashboard stats response:", data);
+
+      if (!data.success) {
+        throw new Error(data.message || "Failed to load dashboard statistics");
+      }
+
       // Handle both response structures and potential misspellings
       const responseData = data.stats || data;
-      setStats({
+      const newStats = {
         totalCourses: responseData.totalCourses || responseData.totalCoures || 0,
         totalLectures: responseData.totalLectures || 0,
         totalUsers: responseData.totalUsers || 0,
         loading: false,
         error: null
-      });
+      };
+
+      console.log("Processed stats:", newStats);
+      setStats(newStats);
       
     } catch (error) {
-      console.error("Dashboard stats error:", error);
+      console.error("Dashboard stats error:", {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status
+      });
+      
       const errorMsg = error.response?.data?.message || "Failed to load dashboard statistics";
       setStats({
         totalCourses: 0,

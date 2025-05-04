@@ -25,29 +25,68 @@ const AdminLectureManager = () => {
     videoSource: 'local',
     youtubeUrl: '',
     file: null,
-    isFreePreview: false
+    isPreview: false
   });
 
   useEffect(() => {
+    if (!courseId) {
+      toast.error("Course ID is missing");
+      navigate("/admin/courses");
+      return;
+    }
     fetchCourseAndLectures();
-  }, [courseId]);
+  }, [courseId, navigate]);
 
   const fetchCourseAndLectures = async () => {
     try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        toast.error('Please login to continue');
+        navigate('/login');
+        return;
+      }
+
+      console.log("Fetching lectures for course ID:", courseId);
       setLoading(true);
+      
+      // Get course details
       const courseResponse = await axios.get(`${server}/api/course/${courseId}`, {
-        headers: { token: localStorage.getItem('token') }
+        headers: { 
+          token: token,
+          'Content-Type': 'application/json'
+        }
       });
+      
+      if (!courseResponse.data.course) {
+        throw new Error('Course not found');
+      }
+      
       setCourseTitle(courseResponse.data.course.title);
 
+      // Get lectures using the updated endpoint
       const lecturesResponse = await axios.get(`${server}/api/lectures/${courseId}`, {
-        headers: { token: localStorage.getItem('token') }
+        headers: { 
+          token: token,
+          'Content-Type': 'application/json'
+        }
       });
-      setLectures(lecturesResponse.data.lectures);
+      
+      console.log('Lectures response:', lecturesResponse.data);
+      
+      if (!lecturesResponse.data.success) {
+        throw new Error(lecturesResponse.data.message || 'Failed to fetch lectures');
+      }
+      
+      setLectures(lecturesResponse.data.lectures || []);
     } catch (error) {
-      console.error('Error fetching data:', error);
-      toast.error('Failed to load course data');
-      navigate('/admin/courses');
+      console.error("Error fetching data:", error);
+      console.error("Error response:", error.response?.data);
+      toast.error(error.response?.data?.message || "Failed to load course data");
+      if (error.response?.status === 401) {
+        navigate('/login');
+      } else {
+        navigate("/admin/courses");
+      }
     } finally {
       setLoading(false);
     }
@@ -89,7 +128,8 @@ const AdminLectureManager = () => {
     try {
       const formDataToSend = new FormData();
       formDataToSend.append('title', formData.title);
-      formDataToSend.append('isFreePreview', formData.isFreePreview);
+      formDataToSend.append('videoSource', formData.videoSource);
+      formDataToSend.append('isPreview', formData.isPreview);
       
       if (formData.videoSource === 'youtube') {
         const youtubeInput = formData.youtubeUrl.trim();
@@ -102,21 +142,19 @@ const AdminLectureManager = () => {
           toast.error('Could not extract YouTube video ID');
           return;
         }
-        formDataToSend.append('videoSource', 'youtube');
         formDataToSend.append('youtubeVideoId', youtubeId);
       } else {
         if (!isEditing && !formData.file) {
           toast.error('Please select a file to upload');
           return;
         }
-        formDataToSend.append('videoSource', 'local');
         if (formData.file) {
           formDataToSend.append('file', formData.file);
         }
       }
 
       if (isEditing && selectedLecture) {
-        // Update existing lecture using the correct endpoint
+        // Update existing lecture
         await axios.put(
           `${server}/api/lecture/${selectedLecture._id}`,
           formDataToSend,
@@ -131,7 +169,8 @@ const AdminLectureManager = () => {
       } else {
         // Add new lecture
         await axios.post(
-          `${server}/api/course/${courseId}`,
+          // `${server}/api/lecture/course/${courseId}/lecture`,
+          `${server}/api/course/${courseId}/lecture`,
           formDataToSend,
           {
             headers: {
@@ -152,13 +191,23 @@ const AdminLectureManager = () => {
         videoSource: 'local',
         youtubeUrl: '',
         file: null,
-        isFreePreview: false
+        isPreview: false
       });
       fetchCourseAndLectures();
     } catch (error) {
       console.error('Error saving lecture:', error);
       toast.error(error.response?.data?.message || `Failed to ${isEditing ? 'update' : 'add'} lecture`);
     }
+  };
+
+  // Helper function to determine file type
+  const getFileType = (mimeType) => {
+    if (mimeType.startsWith('video/')) return 'video';
+    if (mimeType.startsWith('audio/')) return 'audio';
+    if (mimeType === 'application/pdf') return 'pdf';
+    if (mimeType.includes('powerpoint')) return 'ppt';
+    if (mimeType.includes('word')) return 'doc';
+    return 'video'; // default to video
   };
 
   const handleEditClick = (lecture) => {
@@ -169,19 +218,17 @@ const AdminLectureManager = () => {
     let videoSource = 'local';
     let youtubeUrl = '';
     
-    if (lecture.video) {
-      if (lecture.video.source === 'youtube') {
-        videoSource = 'youtube';
-        youtubeUrl = lecture.video.youtubeVideoId || '';
-      }
+    if (lecture.videoSource === 'youtube') {
+      videoSource = 'youtube';
+      youtubeUrl = lecture.youtubeVideoId || '';
     }
     
     setFormData({
       title: lecture.title || '',
       videoSource: videoSource,
       youtubeUrl: youtubeUrl,
-      file: null, // File can't be pre-populated for security reasons
-      isFreePreview: Boolean(lecture.isFreePreview)
+      file: null,
+      isPreview: lecture.isPreview || false
     });
     
     setShowAddForm(true);
@@ -221,7 +268,7 @@ const AdminLectureManager = () => {
       videoSource: 'local',
       youtubeUrl: '',
       file: null,
-      isFreePreview: false
+      isPreview: false
     });
   };
 
@@ -332,14 +379,14 @@ const AdminLectureManager = () => {
               )}
 
               <div className="checkbox-group">
-                <span>Is Free?</span>
+                <span>Preview Available?</span>
                 <button
                   type="button"
-                  className={`preview-toggle ${formData.isFreePreview ? 'active' : ''}`}
-                  onClick={() => setFormData(prev => ({ ...prev, isFreePreview: !prev.isFreePreview }))}
-                  aria-label="Toggle free preview"
+                  className={`preview-toggle ${formData.isPreview ? 'active' : ''}`}
+                  onClick={() => setFormData(prev => ({ ...prev, isPreview: !prev.isPreview }))}
+                  aria-label="Toggle preview availability"
                 >
-                  {formData.isFreePreview ? <FaToggleOn /> : <FaToggleOff />}
+                  {formData.isPreview ? <FaToggleOn /> : <FaToggleOff />}
                 </button>
               </div>
 
@@ -366,9 +413,9 @@ const AdminLectureManager = () => {
                 <span className="lecture-number">{index + 1}</span>
                 <div className="lecture-details">
                   <h4>{item.title}</h4>
-                  {item.isFreePreview && (
+                  {item.isPreview && (
                     <span className="free-preview-badge">
-                      <FaLockOpen /> Free Preview
+                      <FaLockOpen /> Preview Available
                     </span>
                   )}
                 </div>

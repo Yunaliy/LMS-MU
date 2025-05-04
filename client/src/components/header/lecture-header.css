@@ -3,68 +3,144 @@
   top: 0;
   left: 0;
   right: 0;
-  background: linear-gradient(
-    to right,
-    rgba(var(--secondary-color-rgb), 0.95),
-    rgba(var(--secondary-dark-rgb), 0.95)
-  );
-  padding: 0.75rem 1.5rem;
+  height: 60px;
+  background-color: #fff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   z-index: 1000;
-  box-shadow: var(--shadow-sm);
-  margin: 0;
 }
 
 .lecture-header-content {
-  display: flex;
-  align-items: center;
-  gap: 1.5rem;
-  max-width: 1400px;
+  max-width: 1200px;
   margin: 0 auto;
-  justify-content: space-between;
-}
-
-.back-button {
-  background: transparent;
-  border: none;
-  color: var(--text-light);
-  font-size: 1.25rem;
-  padding: 0.5rem;
-  cursor: pointer;
-  border-radius: 50%;
+  height: 100%;
   display: flex;
   align-items: center;
-  justify-content: center;
-  transition: all 0.3s ease;
+  justify-content: space-between;
+  padding: 0 20px;
 }
 
-.back-button:hover {
-  background: rgba(255, 255, 255, 0.1);
-  transform: translateX(-2px);
-}
-
-.course-title {
-  color: var(--text-light);
-  font-size: 1.25rem;
-  font-weight: 500;
-  margin: 0;
-  flex: 1;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 15px;
 }
 
 .header-right {
-  margin-left: auto;
   display: flex;
+  align-items: center;
+  gap: 15px;
+  position: relative;
+}
+
+.back-button {
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  color: #333;
+  cursor: pointer;
+  padding: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s ease;
+}
+
+.back-button:hover {
+  color: var(--primary-color);
+}
+
+.course-title {
+  margin: 0;
+  font-size: 1.2rem;
+  color: #333;
+  font-weight: 500;
+}
+
+.progress-button {
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  color: #333;
+  cursor: pointer;
+  padding: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s ease;
+}
+
+.progress-button:hover {
+  color: var(--primary-color);
+}
+
+.progress-circle {
+  position: relative;
+  width: 100px;
+  height: 100px;
+  margin: 0 auto 1rem;
+}
+
+.progress-circle-bg {
+  transition: stroke 0.3s ease;
+}
+
+.progress-circle-fill {
+  transition: stroke-dashoffset 0.3s ease;
+}
+
+.progress-percentage {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: var(--primary-color);
+}
+
+.progress-tooltip {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background: white;
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  width: 280px;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
   align-items: center;
 }
 
+.progress-message {
+  color: #666;
+  font-size: 14px;
+  text-align: center;
+  margin-top: 1rem;
+}
+
 @media (max-width: 768px) {
-  .lecture-header {
-    padding: 0.5rem 1rem;
+  .lecture-header-content {
+    padding: 0 10px;
   }
 
   .course-title {
-    font-size: 1.1rem;
+    font-size: 1rem;
+  }
+
+  .progress-tooltip {
+    width: 240px;
+    right: 10px;
+    padding: 1rem;
+  }
+
+  .progress-circle {
+    width: 80px;
+    height: 80px;
+  }
+
+  .progress-percentage {
+    font-size: 1.2rem;
   }
 } 
