@@ -1,4 +1,11 @@
 import { createTransport } from "nodemailer";
+import PDFDocument from 'pdfkit';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const sendMail = async (email, subject, data) => {
   try {
@@ -179,6 +186,314 @@ export const sendForgotMail = async (subject, data) => {
     return true;
   } catch (error) {
     console.error("Error sending forgot password email:", error);
+    throw error;
+  }
+};
+
+// Separate function to generate PDF
+const generatePDF = async (data) => {
+  return new Promise((resolve, reject) => {
+    try {
+      const doc = new PDFDocument({
+        size: 'A4',
+        margin: 50,
+        info: {
+          Title: 'Course Enrollment Receipt',
+          Author: 'E-Learning Platform',
+          Subject: 'Course Enrollment Confirmation'
+        }
+      });
+
+      const chunks = [];
+      doc.on('data', chunk => chunks.push(chunk));
+      doc.on('end', () => resolve(Buffer.concat(chunks)));
+      doc.on('error', reject);
+
+      // Add decorative header with gradient
+      doc
+        .rect(30, 30, 535, 120)
+        .fillAndStroke('#f8f9fa', '#b4690e');
+
+      // Add logo to PDF with proper error handling
+      try {
+        const logoPath = path.join(__dirname, '../../client/public/logo.jpg');
+        if (fs.existsSync(logoPath)) {
+          doc.image(logoPath, 50, 50, { width: 80 })
+             .moveDown(1);
+        } else {
+          console.warn('Logo file not found at:', logoPath);
+        }
+      } catch (logoError) {
+        console.error('Error adding logo to PDF:', logoError);
+      }
+
+      // Add main title
+      doc
+        .fontSize(28)
+        .font('Helvetica-Bold')
+        .fillColor('#b4690e')
+        .text('E-LEARNING PLATFORM', { align: 'center' })
+        .moveDown(0.5)
+        .fontSize(20)
+        .text('ENROLLMENT RECEIPT', { align: 'center' })
+        .moveDown(1);
+
+      // Add student name with decorative underline
+      doc
+        .fontSize(16)
+        .font('Helvetica-Bold')
+        .fillColor('#333')
+        .text(`Student: ${data.userName}`, { align: 'center' })
+        .moveDown(0.5)
+        .rect(150, doc.y, 300, 1)
+        .fill('#b4690e')
+        .moveDown(1);
+
+      // Add receipt details in a beautiful box
+      const startX = 50;
+      const startY = doc.y;
+      const boxWidth = 500;
+      const boxHeight = 300;
+
+      // Draw main receipt box with gradient
+      doc
+        .rect(startX, startY, boxWidth, boxHeight)
+        .fillAndStroke('#ffffff', '#b4690e');
+
+      // Add receipt content with better spacing and styling
+      doc
+        .fontSize(12)
+        .font('Helvetica-Bold')
+        .fillColor('#b4690e')
+        .text('Receipt Details:', startX + 20, startY + 30)
+        .moveDown(1);
+
+      // Helper function for detail rows
+      const addDetailRow = (label, value, y) => {
+        doc
+          .font('Helvetica-Bold')
+          .fillColor('#666')
+          .text(label, startX + 30, y)
+          .font('Helvetica')
+          .fillColor('#333')
+          .text(value, startX + 200, y);
+      };
+
+      // Add receipt details with better formatting
+      let currentY = startY + 60;
+      const lineHeight = 25;
+
+      addDetailRow('Transaction ID:', data.transactionId, currentY);
+      currentY += lineHeight;
+      addDetailRow('Date:', new Date(data.createdAt).toLocaleDateString(), currentY);
+      currentY += lineHeight;
+      addDetailRow('Course Title:', data.course.title, currentY);
+      currentY += lineHeight;
+      addDetailRow('Amount Paid:', `ETB ${data.amount}`, currentY);
+      currentY += lineHeight;
+      addDetailRow('Payment Method:', data.paymentMethod, currentY);
+      currentY += lineHeight;
+      addDetailRow('Status:', data.status, currentY);
+      currentY += lineHeight;
+      addDetailRow('Course URL:', `${process.env.FRONTEND_URL}/course/${data.course._id}`, currentY);
+
+      // Add decorative footer
+      doc
+        .moveDown(2)
+        .fontSize(10)
+        .fillColor('#666')
+        .text('This is an official receipt for your course enrollment', { align: 'center' })
+        .text('Please keep this receipt for your records', { align: 'center' })
+        .text(`Generated on: ${new Date().toLocaleString()}`, { align: 'center' })
+        .moveDown(1)
+        .text('Thank you for choosing our platform!', { align: 'center' });
+
+      // Add page border with gradient
+      doc
+        .rect(30, 30, 535, 755)
+        .stroke('#b4690e');
+
+      // Finalize the PDF
+      doc.end();
+    } catch (error) {
+      reject(error);
+    }
+  });
+};
+
+export const sendReceiptMail = async (email, data) => {
+  try {
+    const transport = createTransport({
+      service: "gmail",
+      host: "smtp.gmail.com",
+      port: 465,
+      secure: true,
+      auth: {
+        user: process.env.Gmail,
+        pass: process.env.password,
+      },
+      debug: true
+    });
+
+    // Generate PDF only once
+    const pdfBuffer = await generatePDF(data);
+
+    const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Course Enrollment Confirmation</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            margin: 0;
+            padding: 0;
+        }
+        .email-container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            text-align: center;
+            padding: 20px 0;
+            border-bottom: 2px solid #b4690e;
+        }
+        .logo {
+            max-width: 150px;
+            margin-bottom: 15px;
+        }
+        .content {
+            padding: 20px 0;
+        }
+        .confirmation-box {
+            background-color: #f8f9fa;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .details {
+            margin: 20px 0;
+        }
+        .detail-row {
+            margin-bottom: 10px;
+        }
+        .label {
+            font-weight: bold;
+            color: #666;
+        }
+        .cta-button {
+            display: inline-block;
+            background-color: #b4690e;
+            color: white;
+            padding: 12px 24px;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .footer {
+            text-align: center;
+            padding: 20px 0;
+            border-top: 1px solid #ddd;
+            color: #666;
+            font-size: 14px;
+        }
+        .pdf-notice {
+            background-color: #f8f9fa;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 20px 0;
+            text-align: center;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <div class="header">
+            <img src="cid:logo" alt="Logo" class="logo">
+            <h1 style="color: #b4690e; margin: 0;">Enrollment Confirmation</h1>
+        </div>
+
+        <div class="content">
+            <p>Dear ${data.userName},</p>
+            
+            <p>Thank you for enrolling in our course. Your enrollment has been successfully processed.</p>
+
+            <div class="confirmation-box">
+                <h2 style="color: #b4690e; margin-top: 0;">Enrollment Details</h2>
+                <div class="details">
+                    <div class="detail-row">
+                        <span class="label">Course:</span> ${data.course.title}
+                    </div>
+                    <div class="detail-row">
+                        <span class="label">Transaction ID:</span> ${data.transactionId}
+                    </div>
+                    <div class="detail-row">
+                        <span class="label">Date:</span> ${new Date(data.createdAt).toLocaleDateString()}
+                    </div>
+                    <div class="detail-row">
+                        <span class="label">Amount Paid:</span> ETB ${data.amount}
+                    </div>
+                    <div class="detail-row">
+                        <span class="label">Payment Method:</span> ${data.paymentMethod}
+                    </div>
+                    <div class="detail-row">
+                        <span class="label">Status:</span> <span style="color: #2ecc71;">${data.status}</span>
+                    </div>
+                </div>
+            </div>
+
+            <p>You can now access your course by clicking the button below:</p>
+            
+            <div style="text-align: center;">
+                <a href="${process.env.FRONTEND_URL}/course/${data.course._id}" class="cta-button">Access Course</a>
+            </div>
+
+            <div class="pdf-notice">
+                <p>A PDF copy of your enrollment receipt has been attached to this email for your records.</p>
+            </div>
+
+            <p>If you have any questions or need assistance, please don't hesitate to contact our support team.</p>
+
+            <p>Best regards,<br>E-Learning Platform Team</p>
+        </div>
+
+        <div class="footer">
+            <p>This is an automated message, please do not reply to this email.</p>
+            <p>© ${new Date().getFullYear()} E-Learning Platform. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>`;
+
+    const info = await transport.sendMail({
+      from: process.env.Gmail,
+      to: email,
+      subject: "Course Enrollment Confirmation",
+      html,
+      attachments: [
+        {
+          filename: `receipt-${data.transactionId}.pdf`,
+          content: pdfBuffer
+        },
+        {
+          filename: 'logo.jpg',
+          path: path.join(__dirname, '../../client/public/logo.jpg'),
+          cid: 'logo'
+        }
+      ]
+    });
+    
+    console.log("Receipt email sent successfully:", info.messageId);
+    return true;
+  } catch (error) {
+    console.error("Error sending receipt email:", error);
     throw error;
   }
 };
