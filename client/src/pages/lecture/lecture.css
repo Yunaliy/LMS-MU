@@ -78,6 +78,10 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  background: white;
+  position: sticky;
+  top: 0;
+  z-index: 2;
 }
 
 .panel-header h3 {
@@ -264,6 +268,22 @@
   flex: 1;
   overflow-y: auto;
   padding: 1rem;
+  height: calc(100vh - 120px); /* Account for header and some padding */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
+}
+
+.lecture-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.lecture-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.lecture-list::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 3px;
 }
 
 .lecture-item {
@@ -272,6 +292,7 @@
   margin-bottom: 0.5rem;
   cursor: pointer;
   transition: background-color 0.2s ease;
+  background: white;
 }
 
 .lecture-item:hover {
@@ -420,26 +441,31 @@
 }
 
 .toggle-panel-btn {
-  position: fixed;
+  position: absolute;
   right: 20px;
-  top: 80px;
+  top: 20px;
   z-index: 1000;
-  background: var(--primary-color);
-  color: white;
+  background: #fff;
   border: none;
+  border-radius: 50%;
   width: 40px;
   height: 40px;
-  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
   transition: all 0.3s ease;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
-.toggle-panel-btn.open {
-  right: 320px;
+.toggle-panel-btn:hover {
+  background: #f0f0f0;
+  transform: scale(1.1);
+}
+
+.toggle-panel-btn svg {
+  font-size: 1.2rem;
+  color: #333;
 }
 
 .lecture-panel {
@@ -455,7 +481,6 @@
   z-index: 900;
   display: flex;
   flex-direction: column;
-  overflow-y: auto;
 }
 
 .lecture-panel.open {

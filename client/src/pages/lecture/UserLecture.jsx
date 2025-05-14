@@ -203,28 +203,25 @@ const UserLecture = ({ initialLectureId, isAdmin }) => {
   const handleLectureCompletion = async (lectureId) => {
     try {
       const response = await axios.post(
-        `${server}/api/user/progress`,
-        {
-          userId: user._id,
-          courseId: params.id,
-          lectureId: lectureId
-        },
+        `${server}/api/user/progress?course=${params.id}&lectureId=${lectureId}`,
+        {},
         {
           headers: {
             token: localStorage.getItem("token")
           }
         }
-      );
+        );
 
       if (response.data.success) {
-        setProgress(response.data.progress);
         setIsCompleted(true);
         toast.success('Lecture marked as complete!');
         await fetchProgress(); // Refresh progress data
+      } else {
+        throw new Error(response.data.message || 'Failed to update progress');
       }
-    } catch (error) {
+      } catch (error) {
       console.error('Error updating progress:', error);
-      toast.error('Failed to update progress. Please try again.');
+      toast.error(error.response?.data?.message || 'Failed to update progress. Please try again.');
     }
   };
 
@@ -274,11 +271,11 @@ const UserLecture = ({ initialLectureId, isAdmin }) => {
     } else if (lecture.fileUrl) {
       return (
         <div className="video-container">
-          <video
+            <video
             className="preview-video"
-            controls
+              controls
             src={`${server}/uploads/${lecture.fileUrl}`}
-            onEnded={() => handleLectureCompletion(lecture._id)}
+                onEnded={() => handleLectureCompletion(lecture._id)}
           />
         </div>
       );
@@ -354,7 +351,7 @@ const UserLecture = ({ initialLectureId, isAdmin }) => {
                     onChange={() => handleLectureCompletion(lecture._id)}
                   />
                   <label htmlFor="lecture-complete">Mark as complete</label>
-                </div>
+                  </div>
               </div>
             </>
           ) : (

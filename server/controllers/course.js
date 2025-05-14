@@ -273,39 +273,36 @@ export const addProgress = TryCatch(async (req, res) => {
       });
     }
 
+    // Find or create progress record
     let progress = await Progress.findOne({
       user: req.user._id,
-      course: course,
+      course: course
     });
 
-    // If no progress exists, create a new one
     if (!progress) {
       progress = await Progress.create({
         user: req.user._id,
         course: course,
         completedLectures: [lectureId]
       });
-      return res.status(201).json({
-        success: true,
-        message: "Progress created and lecture marked as completed",
-      });
+    } else {
+      // If progress exists, check if lecture is already completed
+      if (!progress.completedLectures.includes(lectureId)) {
+        progress.completedLectures.push(lectureId);
+        await progress.save();
+      }
     }
 
-    // If progress exists, check if lecture is already completed
-    if (progress.completedLectures.includes(lectureId)) {
-      return res.json({
-        success: true,
-        message: "Progress already recorded for this lecture",
-      });
-    }
-
-    // Add the lecture to completed lectures
-    progress.completedLectures.push(lectureId);
-    await progress.save();
+    // Fetch updated progress with populated fields
+    const updatedProgress = await Progress.findOne({
+      user: req.user._id,
+      course: course
+    }).populate('completedLectures');
 
     res.status(200).json({
       success: true,
       message: "Progress updated successfully",
+      progress: updatedProgress
     });
   } catch (error) {
     console.error("Error updating progress:", error);
@@ -318,32 +315,44 @@ export const addProgress = TryCatch(async (req, res) => {
 });
 
 export const getYourProgress = TryCatch(async (req, res) => {
-  const progress = await Progress.findOne({
-    user: req.user._id,
-    course: req.query.course,
-  });
+  try {
+    const progress = await Progress.findOne({
+      user: req.user._id,
+      course: req.query.course,
+    });
 
-  if (!progress) {
-    const allLectures = (await Lecture.find({ course: req.query.course })).length;
-    return res.json({
-      courseProgressPercentage: 0,
-      completedLectures: 0,
-      allLectures,
-      progress: [],
-      message: "null"
+    const allLectures = await Lecture.find({ course: req.query.course });
+    const totalLectures = allLectures.length;
+
+    if (!progress) {
+      return res.json({
+        courseProgressPercentage: 0,
+        completedLectures: 0,
+        allLectures: totalLectures,
+        progress: [],
+        message: "null"
+      });
+    }
+
+    const completedLectures = progress.completedLectures.length;
+    const courseProgressPercentage = totalLectures > 0 
+      ? Math.round((completedLectures * 100) / totalLectures) 
+      : 0;
+
+    res.json({
+      courseProgressPercentage,
+      completedLectures,
+      allLectures: totalLectures,
+      progress: [progress],
+    });
+  } catch (error) {
+    console.error("Error in getYourProgress:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to get progress",
+      error: error.message
     });
   }
-
-  const allLectures = (await Lecture.find({ course: req.query.course })).length;
-  const completedLectures = progress.completedLectures.length;
-  const courseProgressPercentage = allLectures > 0 ? (completedLectures * 100) / allLectures : 0;
-
-  res.json({
-    courseProgressPercentage,
-    completedLectures,
-    allLectures,
-    progress: [progress],
-  });
 });
 
 export const createCourse = TryCatch(async (req, res) => {

@@ -8,6 +8,7 @@ import {
   fetchLecture,
   fetchLectures,
 } from "../controllers/lecture.js";
+import { addProgress, getYourProgress } from "../controllers/course.js";
 
 const router = express.Router();
 
@@ -20,6 +21,12 @@ router.delete("/lecture/:id", isAuth, isAdmin, deleteLecture);
 router.get("/lectures/:id", isAuth, fetchLectures);
 router.get("/lecture/:id", isAuth, fetchLecture);
 
+
+//Progress routes (require authentication)
+router.post("/user/progress", isAuth, addProgress);
+router.get("/user/progress", isAuth, getYourProgress);
+// router.post('/user/progress', isAuth, addProgress);
+// router.get('/user/progress', isAuth, getYourProgress);
 // Add a test route for debugging
 router.get("/test", (req, res) => {
   res.json({ message: "Lecture routes are working" });

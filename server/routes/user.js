@@ -13,7 +13,7 @@ import {
 } from '../controllers/user.js';
 import { isAuth, isAdmin } from '../middlewares/isAuth.js';
 import { upload } from '../middlewares/multer.js';
-import { addProgress, getYourProgress } from '../controllers/course.js';
+// import { addProgress, getYourProgress } from '../controllers/course.js';
 
 const router = express.Router();
 
@@ -37,7 +37,7 @@ router.get('/user/:userId/details', isAuth, isAdmin, getUserDetails);
 router.put('/user/:userId/role', isAuth, isAdmin, updateUserRole);
 
 // Progress routes
-router.post('/user/progress', isAuth, addProgress);
-router.get('/user/progress', isAuth, getYourProgress);
+// router.post('/user/progress', isAuth, addProgress);
+// router.get('/user/progress', isAuth, getYourProgress);
 
 export default router;
