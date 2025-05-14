@@ -33,6 +33,11 @@ const schema = new mongoose.Schema(
         ref: "Courses",
       },
     ],
+    receiptSent: {
+      type: Map,
+      of: Boolean,
+      default: new Map()
+    },
     resetPasswordExpire: Date,
   },
   {
