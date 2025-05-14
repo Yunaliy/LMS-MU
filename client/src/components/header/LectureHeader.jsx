@@ -23,12 +23,12 @@ const LectureHeader = ({ title, progressPercentage }) => {
     <header className="lecture-header">
       <div className="lecture-header-content">
         <div className="header-left">
-        <button className="back-button" onClick={() => navigate(-1)}>
-          <FaArrowLeft />
-        </button>
+          <button className="back-button" onClick={() => navigate(-1)}>
+            <FaArrowLeft />
+          </button>
           <h1 className="course-title">{title}</h1>
         </div>
-          <div className="header-right">
+        <div className="header-center">
           <button 
             className="progress-button"
             onClick={() => setShowProgress(!showProgress)}
@@ -67,9 +67,10 @@ const LectureHeader = ({ title, progressPercentage }) => {
               <div className="progress-message">
                 Complete the whole lecture to get the certificate
               </div>
-          </div>
-        )}
+            </div>
+          )}
         </div>
+        <div className="header-right"></div>
       </div>
     </header>
   );

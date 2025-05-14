@@ -378,7 +378,7 @@ export const createCourse = TryCatch(async (req, res) => {
       subtitle,
       category,
       createdBy: createdBy || req.user.name,
-      image: image ? image.filename : undefined
+      image: image ? (image.path.replace(/\\/g, '/').split('uploads/').pop()) : undefined
     };
 
     // Create the course
@@ -432,7 +432,7 @@ export const updateCourse = TryCatch(async (req, res) => {
           console.error('Error deleting old image:', error);
         }
       }
-      course.image = image.filename;
+      course.image = image.path.replace(/\\/g, '/').split('uploads/').pop();
     }
 
     await course.save();

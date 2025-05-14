@@ -19,17 +19,22 @@
   padding: 0 20px;
 }
 
-.header-left {
+.header-left, .header-center, .header-right {
   display: flex;
   align-items: center;
-  gap: 15px;
 }
 
+.header-left {
+  flex: 1 1 0;
+  min-width: 0;
+}
+.header-center {
+  flex: 1 1 0;
+  justify-content: center;
+}
 .header-right {
-  display: flex;
-  align-items: center;
-  gap: 15px;
-  position: relative;
+  flex: 1 1 0;
+  justify-content: flex-end;
 }
 
 .back-button {
@@ -54,6 +59,11 @@
   font-size: 1.2rem;
   color: #333;
   font-weight: 500;
+  margin-left: 8px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 350px;
 }
 
 .progress-button {
@@ -100,8 +110,9 @@
 
 .progress-tooltip {
   position: absolute;
-  top: 100%;
-  right: 0;
+  top: 120%;
+  left: 50%;
+  transform: translateX(-50%);
   background: white;
   border-radius: 8px;
   padding: 1.5rem;
@@ -127,11 +138,13 @@
 
   .course-title {
     font-size: 1rem;
+    max-width: 180px;
   }
 
   .progress-tooltip {
     width: 240px;
-    right: 10px;
+    left: 50%;
+    transform: translateX(-50%);
     padding: 1rem;
   }
 
