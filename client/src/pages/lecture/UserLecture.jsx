@@ -11,6 +11,8 @@ import YouTube from 'react-youtube';
 import LectureHeader from "../../components/header/LectureHeader";
 import confetti from 'canvas-confetti';
 import { UserData } from "../../context/UserContext";
+import { BsChevronLeft } from "react-icons/bs";
+
 
 const UserLecture = ({ initialLectureId, isAdmin }) => {
   const { user } = UserData();
@@ -253,30 +255,35 @@ const UserLecture = ({ initialLectureId, isAdmin }) => {
     if (lecture.videoSource === 'youtube' && lecture.youtubeVideoId) {
       return (
         <div className="video-container">
-          <YouTube
-            videoId={lecture.youtubeVideoId}
-            className="preview-video"
-            opts={{
-              playerVars: {
-                autoplay: 0,
-                controls: 1,
-                modestbranding: 1,
-                rel: 0
-              }
-            }}
-            onEnd={() => handleLectureCompletion(lecture._id)}
-          />
+          <div className="video-letterbox">
+            <YouTube
+              videoId={lecture.youtubeVideoId}
+              className="preview-video"
+              opts={{
+                playerVars: {
+                  autoplay: 0,
+                  controls: 1,
+                  modestbranding: 1,
+                  rel: 0
+                }
+              }}
+              onEnd={() => handleLectureCompletion(lecture._id)}
+            />
+          </div>
         </div>
       );
-    } else if (lecture.fileUrl) {
+    } else if (lecture.file) {
+      const filePath = lecture.file.startsWith('uploads/') ? lecture.file : `uploads/${lecture.file}`;
       return (
         <div className="video-container">
+          <div className="video-letterbox">
             <video
-            className="preview-video"
+              className="preview-video"
               controls
-            src={`${server}/uploads/${lecture.fileUrl}`}
-                onEnded={() => handleLectureCompletion(lecture._id)}
-          />
+              src={`${server}/${filePath}`}
+              onEnded={() => handleLectureCompletion(lecture._id)}
+            />
+          </div>
         </div>
       );
     }
@@ -287,55 +294,107 @@ const UserLecture = ({ initialLectureId, isAdmin }) => {
   if (loading) return <Loading />;
 
   return (
-    <div className="lecture-container">
-      <LectureHeader 
-        title={courseTitle} 
-        progressPercentage={progressPercentage} 
-        onBack={handleBack}
-      />
-      
-      <div className="lecture-content">
-        <button 
-          className={`toggle-panel-btn ${isPanelOpen ? 'open' : ''}`} 
-          onClick={togglePanel}
+    <div className="lecture-udemy-layout d-flex" style={{ minHeight: '100vh', background: 'var(--bs-body-bg, #f5f5f5)' }}>
+      {/* Sidebar (right) */}
+      {isPanelOpen && (
+        <div
+          className={`lecture-panel-udemy open d-flex flex-column`}
+          style={{
+            position: 'fixed',
+            right: 0,
+            top: 0,
+            height: '100vh',
+            width: 340,
+            maxWidth: '100vw',
+            background: 'var(--bs-body-bg, #fff)',
+            boxShadow: 'rgba(0,0,0,0.08) -2px 0 8px',
+            zIndex: 1200,
+            transition: 'transform 0.3s',
+            transform: 'translateX(0)',
+          }}
         >
-          {isPanelOpen ? <FaTimes /> : <FaBars />}
-        </button>
-
-        <div className={`lecture-panel ${isPanelOpen ? 'open' : ''}`}>
-          <div className="panel-header">
-            <h3>Course Content</h3>
+          {/* Sticky Header */}
+          <div className="panel-header sticky-top d-flex align-items-center justify-content-between px-3 py-2" style={{ background: 'var(--bs-body-bg, #fff)', borderBottom: '1px solid #e1e1e1', zIndex: 2 }}>
+            <span className="fw-bold">Course content</span>
+            <button
+              className="btn btn-link p-0 ms-2 lecture-panel-close-btn"
+              style={{ fontSize: 22, color: 'var(--bs-body-color, #333)' }}
+              onClick={togglePanel}
+              aria-label="Close sidebar"
+            >
+              <FaTimes />
+            </button>
           </div>
-
-          <div className="lecture-list">
+          {/* Scrollable Lecture List */}
+          <div className="lecture-list flex-grow-1 overflow-auto px-2" style={{ minHeight: 0 }}>
             {lectures.map((item, index) => (
               <div
                 key={item._id}
                 className={`lecture-item ${item._id === lecture?._id ? 'active' : ''}`}
                 onClick={() => handleLectureClick(item._id)}
+                style={{ cursor: 'pointer' }}
               >
-                <div className="lecture-item-content">
+                <div className="lecture-item-content d-flex align-items-center">
                   <span className="lecture-number">{index + 1}</span>
-                  <div className="lecture-details">
+                  <div className="lecture-details flex-grow-1">
                     <h4>{item.title}</h4>
                     {item.duration && (
-                      <span className="lecture-duration">
-                        {item.duration}
-                      </span>
+                      <span className="lecture-duration">{item.duration}</span>
                     )}
                   </div>
+                  {progress[0]?.completedLectures?.includes(item._id) && (
+                    <div className="completion-status">
+                      <TiTick className="completed-icon" />
+                    </div>
+                  )}
                 </div>
-                {progress[0]?.completedLectures?.includes(item._id) && (
-                  <div className="completion-status">
-                    <TiTick className="completed-icon" />
-                  </div>
-                )}
               </div>
             ))}
           </div>
         </div>
-
-        <div className={`lecture-main ${isPanelOpen ? 'with-panel' : ''}`}>
+      )}
+      {/* Main Content (left) */}
+      <div
+        className={`flex-grow-1 lecture-main-content ${isPanelOpen ? 'with-panel' : 'no-panel'}`}
+        style={{
+          minHeight: '100vh',
+          display: 'flex',
+          flexDirection: 'column',
+          transition: 'margin-right 0.3s',
+          marginRight: isPanelOpen ? 340 : 56,
+          marginLeft: 0,
+        }}
+      >
+        <LectureHeader 
+          title={courseTitle} 
+          progressPercentage={progressPercentage} 
+          onBack={handleBack}
+        />
+        <div className="flex-grow-1 d-flex flex-column" style={{ overflowY: 'auto', marginTop: 60 }}>
+          {/* Right toggle button when panel is closed */}
+          {!isPanelOpen && (
+            <button
+              className="lecture-panel-toggle-btn btn btn-light right-toggle"
+              style={{
+                position: 'fixed',
+                right: 0,
+                top: '50%',
+                zIndex: 1300,
+                borderTopLeftRadius: 20,
+                borderBottomLeftRadius: 20,
+                border: '1px solid #e1e1e1',
+                boxShadow: 'rgba(0,0,0,0.08) -2px 0 8px',
+                padding: '8px 12px',
+                transform: 'translateY(-50%)',
+                background: 'var(--bs-body-bg, #fff)',
+                color: 'var(--bs-body-color, #333)'
+              }}
+              onClick={togglePanel}
+              aria-label="Open sidebar"
+            >
+              <FaArrowLeft />
+            </button>
+          )}
           {lecLoading ? (
             <Loading />
           ) : lecture ? (
@@ -351,7 +410,7 @@ const UserLecture = ({ initialLectureId, isAdmin }) => {
                     onChange={() => handleLectureCompletion(lecture._id)}
                   />
                   <label htmlFor="lecture-complete">Mark as complete</label>
-                  </div>
+                </div>
               </div>
             </>
           ) : (

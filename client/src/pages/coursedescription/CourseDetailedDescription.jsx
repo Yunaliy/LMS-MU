@@ -12,6 +12,13 @@ import Loading from '../../components/Loading';
 const VideoPreviewDialog = ({ lecture, onClose }) => {
   if (!lecture) return null;
 
+  let videoUrl = '';
+  if (lecture.videoSource === 'youtube' && lecture.youtubeVideoId) {
+    videoUrl = `https://www.youtube.com/embed/${lecture.youtubeVideoId}`;
+  } else if (lecture.videoSource === 'local' && lecture.file) {
+    videoUrl = lecture.file.startsWith('uploads/') ? `${server}/${lecture.file}` : `${server}/uploads/${lecture.file}`;
+  }
+
   return (
     <div className="video-preview-overlay">
       <div className="video-preview-content">
@@ -25,7 +32,7 @@ const VideoPreviewDialog = ({ lecture, onClose }) => {
           {lecture.videoSource === 'youtube' ? (
             <iframe
               className="preview-video"
-              src={lecture.video}
+              src={videoUrl}
               title={lecture.title}
               frameBorder="0"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
@@ -34,7 +41,7 @@ const VideoPreviewDialog = ({ lecture, onClose }) => {
           ) : (
             <video
               className="preview-video"
-              src={lecture.video}
+              src={videoUrl}
               controls
               controlsList="nodownload"
             />
