@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 import { server } from "../../config";
 import toast from "react-hot-toast";
@@ -29,13 +29,13 @@ const ResetPassword = () => {
       toast.error("Password must be at least 6 characters long");
       return;
     }
-
+    
     setLoading(true);
 
     try {
       const { data } = await axios.post(
-        `${server}/api/user/reset`,
-        { token, password },
+        `${server}/api/reset/${token}`,
+        { password },
         {
           headers: {
             "Content-Type": "application/json",
@@ -95,13 +95,12 @@ const ResetPassword = () => {
                   >
                     {loading ? "Resetting Password..." : "Reset Password"}
                   </button>
-                  <button 
-                    type="button" 
-                    className="btn btn-outline-secondary"
-                    onClick={() => navigate("/login")}
-                  >
-                    Back to Login
-                  </button>
+                
+                   <p className="mb-0">
+                                      <Link to="/login" className="text-decoration-none">
+                                        Back to login
+                                      </Link>
+                                    </p>
                 </div>
               </form>
             </div>

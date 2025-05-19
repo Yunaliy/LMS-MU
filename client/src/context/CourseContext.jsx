@@ -8,11 +8,11 @@ export const CourseContextProvider = ({ children }) => {
   const [courses, setCourses] = useState([]);
   const [course, setCourse] = useState([]);
   const [mycourse, setMyCourse] = useState([]);
+  const [lastUpdate, setLastUpdate] = useState(Date.now());
 
   async function fetchCourses() {
     try {
       const { data } = await axios.get(`${server}/api/course/all`);
-
       setCourses(data.courses);
     } catch (error) {
       console.log(error);
@@ -52,10 +52,53 @@ export const CourseContextProvider = ({ children }) => {
     }
   }
 
+  const updateCourseRating = (courseId, newRating, numberOfRatings) => {
+    // Update in courses list
+    setCourses(prevCourses => 
+      prevCourses.map(course => 
+        course._id === courseId 
+          ? { ...course, averageRating: newRating, numberOfRatings }
+          : course
+      )
+    );
+
+    // Update in mycourse list
+    setMyCourse(prevMyCourses =>
+      prevMyCourses.map(course =>
+        course._id === courseId
+          ? { ...course, averageRating: newRating, numberOfRatings }
+          : course
+      )
+    );
+
+    // Update in single course view
+    if (course._id === courseId) {
+      setCourse(prevCourse => ({
+        ...prevCourse,
+        averageRating: newRating,
+        numberOfRatings
+      }));
+    }
+
+    // Force a refresh of all course data
+    setLastUpdate(Date.now());
+  };
+
+  // Refresh all course data
+  const refreshCourseData = async () => {
+    await Promise.all([
+      fetchCourses(),
+      fetchMyCourse(),
+      course._id && fetchCourse(course._id)
+    ]);
+    setLastUpdate(Date.now());
+  };
+
   useEffect(() => {
     fetchCourses();
     fetchMyCourse();
   }, []);
+
   return (
     <CourseContext.Provider
       value={{
@@ -65,6 +108,9 @@ export const CourseContextProvider = ({ children }) => {
         course,
         mycourse,
         fetchMyCourse,
+        updateCourseRating,
+        refreshCourseData,
+        lastUpdate
       }}
     >
       {children}

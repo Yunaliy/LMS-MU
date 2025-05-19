@@ -66,6 +66,14 @@ const courseSchema = new mongoose.Schema({
     type: Number,
     required: true,
   },
+  averageRating: {
+    type: Number,
+    default: 0,
+  },
+  numberOfRatings: {
+    type: Number,
+    default: 0,
+  },
   createdAt: {
     type: Date,
     default: Date.now,

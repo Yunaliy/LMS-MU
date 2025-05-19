@@ -155,27 +155,29 @@
 
 .submit-btn,
 .edit-btn {
-  background-color: #e8eaf6;
-  color: #1a237e;
+  background-color: var(--secondary-dark);
+  color: #ffebee;
 }
 
 .delete-btn {
-  background-color: #ffebee;
-  color: #c62828;
+  background-color: #c62828;
+  color: #ffebee;
 }
 
-.add-question-btn:hover,
-.submit-btn:hover,
+
 .edit-btn:hover {
-  background-color: #c5cae9;
+  background-color: var(--secondary-color);
 }
-
+.add-question-btn:hover,
+.submit-btn:hover{
+  background-color: #bbdefb;
+}
 .cancel-btn:hover {
   background-color: #e0e0e0;
 }
 
 .delete-btn:hover {
-  background-color: #ffcdd2;
+  background-color: #ef0b0b;
 }
 
 /* Read-only view styles */

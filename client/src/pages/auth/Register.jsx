@@ -2,10 +2,11 @@ import React, { useState } from "react";
 import "./auth.css";
 import { Link, useNavigate } from "react-router-dom";
 import { UserData } from "../../context/UserContext";
+import { FcGoogle } from "react-icons/fc";
 
 const Register = () => {
   const navigate = useNavigate();
-  const { btnLoading, registerUser } = UserData();
+  const { btnLoading, registerUser, loginWithGoogle } = UserData();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
@@ -42,6 +43,14 @@ const Register = () => {
   const submitHandler = async (e) => {
     e.preventDefault();
     await registerUser(name, email, password, navigate);
+  };
+
+  const handleGoogleLogin = async () => {
+    try {
+      await loginWithGoogle(navigate);
+    } catch (error) {
+      console.error("Google login error:", error);
+    }
   };
 
   return (
@@ -132,6 +141,16 @@ const Register = () => {
                     disabled={btnLoading}
                   >
                     {btnLoading ? "Please Wait..." : "Register"}
+                  </button>
+
+                  <button
+                    type="button"
+                    className="btn btn-outline-dark d-flex align-items-center justify-content-center gap-2"
+                    onClick={handleGoogleLogin}
+                    disabled={btnLoading}
+                  >
+                    <FcGoogle size={20} />
+                    Continue with Google
                   </button>
                 </div>
 

@@ -319,22 +319,22 @@
   transition: background-color 0.2s;
 }
 
-.edit-btn {
-  background-color: #e3f2fd;
-  color: #e8eaf6;
+.admin-lecture-manager .lecture-item .edit-btn {
+  background-color: var(--secondary-color);
+  color: white;
 }
 
-.delete-btn {
-  background-color: #ffebee;
-  color: #e8eaf6;
+.admin-lecture-manager .lecture-item .delete-btn {
+  background-color: c62828;
+  color: white;
 }
 
-.edit-btn:hover {
-  background-color: #bbdefb;
+.admin-lecture-manager .lecture-item .edit-btn:hover {
+  background-color: var(--secondary-dark);
 }
 
-.delete-btn:hover {
-  background-color: #ffcdd2;
+.admin-lecture-manager .lecture-item .delete-btn:hover {
+  background-color: #f4061e;
 }
 
 .no-lectures {

@@ -256,19 +256,19 @@ const UserLecture = ({ initialLectureId, isAdmin }) => {
       return (
         <div className="video-container">
           <div className="video-letterbox">
-            <YouTube
-              videoId={lecture.youtubeVideoId}
-              className="preview-video"
-              opts={{
-                playerVars: {
-                  autoplay: 0,
-                  controls: 1,
-                  modestbranding: 1,
-                  rel: 0
-                }
-              }}
-              onEnd={() => handleLectureCompletion(lecture._id)}
-            />
+          <YouTube
+            videoId={lecture.youtubeVideoId}
+            className="preview-video"
+            opts={{
+              playerVars: {
+                autoplay: 0,
+                controls: 1,
+                modestbranding: 1,
+                rel: 0
+              }
+            }}
+            onEnd={() => handleLectureCompletion(lecture._id)}
+          />
           </div>
         </div>
       );
@@ -278,11 +278,11 @@ const UserLecture = ({ initialLectureId, isAdmin }) => {
         <div className="video-container">
           <div className="video-letterbox">
             <video
-              className="preview-video"
+            className="preview-video"
               controls
               src={`${server}/${filePath}`}
-              onEnded={() => handleLectureCompletion(lecture._id)}
-            />
+                onEnded={() => handleLectureCompletion(lecture._id)}
+          />
           </div>
         </div>
       );
@@ -316,14 +316,14 @@ const UserLecture = ({ initialLectureId, isAdmin }) => {
           {/* Sticky Header */}
           <div className="panel-header sticky-top d-flex align-items-center justify-content-between px-3 py-2" style={{ background: 'var(--bs-body-bg, #fff)', borderBottom: '1px solid #e1e1e1', zIndex: 2 }}>
             <span className="fw-bold">Course content</span>
-            <button
+        <button 
               className="btn btn-link p-0 ms-2 lecture-panel-close-btn"
               style={{ fontSize: 22, color: 'var(--bs-body-color, #333)' }}
-              onClick={togglePanel}
+          onClick={togglePanel}
               aria-label="Close sidebar"
             >
               <FaTimes />
-            </button>
+        </button>
           </div>
           {/* Scrollable Lecture List */}
           <div className="lecture-list flex-grow-1 overflow-auto px-2" style={{ minHeight: 0 }}>
@@ -341,12 +341,12 @@ const UserLecture = ({ initialLectureId, isAdmin }) => {
                     {item.duration && (
                       <span className="lecture-duration">{item.duration}</span>
                     )}
+                </div>
+                {progress[0]?.completedLectures?.includes(item._id) && (
+                  <div className="completion-status">
+                    <TiTick className="completed-icon" />
                   </div>
-                  {progress[0]?.completedLectures?.includes(item._id) && (
-                    <div className="completion-status">
-                      <TiTick className="completed-icon" />
-                    </div>
-                  )}
+                )}
                 </div>
               </div>
             ))}
@@ -410,7 +410,7 @@ const UserLecture = ({ initialLectureId, isAdmin }) => {
                     onChange={() => handleLectureCompletion(lecture._id)}
                   />
                   <label htmlFor="lecture-complete">Mark as complete</label>
-                </div>
+                  </div>
               </div>
             </>
           ) : (

@@ -82,6 +82,10 @@
   }
 }
 
+.btn-google-hover:hover {
+  background-color: var(--primary-dark);
+}
+
 /* Button Styles */
 .btn-primary {
   display: flex;

@@ -1,0 +1,16 @@
+.star-rating {
+  display: inline-block;
+}
+
+.star-rating span {
+  margin-right: 2px; /* Adjust spacing between stars if needed */
+}
+
+.star-rating.interactive span {
+  cursor: pointer;
+}
+
+.star-rating.average span {
+  /* Styles for non-interactive average rating display */
+  pointer-events: none; /* Disable clicks */
+} 

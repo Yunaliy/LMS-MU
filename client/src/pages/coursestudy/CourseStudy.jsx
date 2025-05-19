@@ -19,6 +19,8 @@ import {
   FaTimes
 } from 'react-icons/fa';
 import confetti from 'canvas-confetti';
+import StarRating from '../../components/StarRating/StarRating.jsx';
+import RatingDialog from '../../components/RatingDialog/RatingDialog.jsx';
 
 const CertificateModal = ({ isOpen, onClose, certificateUrl, onDownload, courseTitle }) => {
   if (!isOpen) return null;
@@ -37,7 +39,7 @@ const CertificateModal = ({ isOpen, onClose, certificateUrl, onDownload, courseT
             src={certificateUrl}
             title="Certificate Preview"
             width="100%"
-            height="500px"
+            height="600px"
             className="certificate-preview"
           />
         </div>
@@ -71,6 +73,9 @@ const CourseStudy = () => {
   const [showCertificateModal, setShowCertificateModal] = useState(false);
   const [certificateUrl, setCertificateUrl] = useState(null);
   const [isLoadingCertificate, setIsLoadingCertificate] = useState(false);
+  const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
+  const [userRating, setUserRating] = useState(null);
+  const [showRatingDialog, setShowRatingDialog] = useState(false);
 
   useEffect(() => {
     if (!effectiveCourseId) {
@@ -197,6 +202,31 @@ const CourseStudy = () => {
 
     fetchAssessmentStatus();
   }, [course, effectiveCourseId, user?.role]);
+
+  useEffect(() => {
+    const fetchUserRating = async () => {
+      if (user?.subscription?.includes(effectiveCourseId)) {
+        try {
+          const token = localStorage.getItem("token");
+          const { data } = await axios.get(
+            `${server}/api/course/${effectiveCourseId}/rating/my`,
+            { headers: { token } }
+          );
+          setUserRating(data.rating);
+        } catch (error) {
+          if (error.response?.status === 404) {
+            setUserRating(null);
+          } else {
+            console.error("Error fetching user rating:", error);
+          }
+        }
+      }
+    };
+
+    if (effectiveCourseId && user && user.role !== "admin") {
+      fetchUserRating();
+    }
+  }, [effectiveCourseId, user]);
 
   const getImageUrl = imagePath => {
     if (!imagePath) return '/placeholder-course.jpg';
@@ -352,6 +382,39 @@ const CourseStudy = () => {
     };
   }, [certificateUrl]);
 
+  const handleSaveRating = async (ratingValue) => {
+    try {
+      const token = localStorage.getItem("token");
+      const { data } = await axios.post(
+        `${server}/api/course/${effectiveCourseId}/rating`,
+        { rating: ratingValue },
+        { headers: { token } }
+      );
+      setUserRating(ratingValue);
+      toast.success("Rating saved successfully");
+      setShowRatingDialog(false);
+    } catch (error) {
+      console.error("Error saving rating:", error);
+      toast.error(error.response?.data?.message || "Failed to save rating");
+    }
+  };
+
+  const handleDeleteRating = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const { data } = await axios.delete(
+        `${server}/api/course/${effectiveCourseId}/rating/my`,
+        { headers: { token } }
+      );
+      setUserRating(null);
+      toast.success("Rating deleted successfully");
+      setShowRatingDialog(false);
+    } catch (error) {
+      console.error("Error deleting rating:", error);
+      toast.error(error.response?.data?.message || "Failed to delete rating");
+    }
+  };
+
   const AdminView = () => (
     <div className="admin-course-management">
       <h1>Course Management</h1>
@@ -394,6 +457,23 @@ const CourseStudy = () => {
             {completedCount} of {totalLectures} lectures completed
           </p>
         </div>
+
+        {/* Rating Section */}
+        {user?.subscription?.includes(effectiveCourseId) && (
+            <div className="rating-section" onClick={(e) => e.stopPropagation()}> 
+                <StarRating 
+                    rating={userRating}
+                    onRatingClick={() => setShowRatingDialog(true)}
+                    size={20}
+                    color="var(--primary-color)"
+                    interactive={true}
+                />
+                <span className="rating-text">
+                    {userRating !== null ? userRating.toFixed(1) : "Leave Rating"}
+                </span>
+            </div>
+        )}
+
         <div className="course-actions">
           <Link
             to={`/lectures/${course?._id}`}
@@ -433,6 +513,19 @@ const CourseStudy = () => {
             <span>Get Certificate</span>
           </button>
         </div>
+
+        {/* Rating Dialog */}
+        {user?.subscription?.includes(effectiveCourseId) && (
+            <RatingDialog 
+                isOpen={showRatingDialog}
+                onClose={() => setShowRatingDialog(false)}
+                currentRating={userRating}
+                onSave={handleSaveRating}
+                onDelete={handleDeleteRating}
+                courseTitle={course?.title}
+            />
+        )}
+
       </div>
     );
   };
@@ -444,6 +537,7 @@ const CourseStudy = () => {
   const content = (
     <div className={`course-study-page ${user?.role === "admin" ? 'admin-mode' : ''}`}>
       <div className="course-header">
+        <div className="image-container">
         <img
           src={getImageUrl(course.image)}
           alt={course.title || 'Course'}
@@ -452,12 +546,29 @@ const CourseStudy = () => {
             e.target.src = '/placeholder-course.jpg';
           }}
         />
+        </div>
         <div className="course-info">
           <h2>{course.title}</h2>
           <div 
-            className="description"
+            className={`description ${isDescriptionExpanded ? 'expanded' : ''}`}
             dangerouslySetInnerHTML={{ __html: course.description }}
           />
+          {!isDescriptionExpanded && (
+            <button 
+              onClick={() => setIsDescriptionExpanded(true)}
+              className="read-more-btn"
+            >
+              Read More
+            </button>
+          )}
+          {isDescriptionExpanded && (
+             <button
+               onClick={() => setIsDescriptionExpanded(false)}
+               className="read-more-btn"
+             >
+               Read Less
+             </button>
+           )}
           <div className="meta-info">
             <span>
               <i className="fas fa-user"></i> {course.createdBy}
@@ -478,27 +589,27 @@ const CourseStudy = () => {
 
   return (
     <>
-            {user?.role === "admin" ? (
+      {user?.role === "admin" ? (
         <Layout>
           <div style={{ marginTop: '60px' }}>{content}</div>
         </Layout>
-            ) : (
-              <>
+      ) : (
+        <>
           {content}
           {showCertificateModal && (
-            <div className="certificate-modal">
-              <div className="certificate-modal-content">
+            <div className="certificate-modal-overlay">
+              <div className="certificate-modal">
                 <div className="certificate-modal-header">
                   <h2 className="certificate-modal-title">Course Certificate - {course?.title}</h2>
                   <button className="certificate-modal-close" onClick={closeCertificateModal}>×</button>
                 </div>
                 <div className="certificate-viewer">
                   {certificateUrl && (
-                    <embed
+                    <iframe
                       src={certificateUrl}
-                      type="application/pdf"
+                      title="Certificate Preview"
                       width="100%"
-                      height="100%"
+                      height="600px"
                       className="certificate-preview"
                     />
                   )}
@@ -512,8 +623,8 @@ const CourseStudy = () => {
                     <FaDownload /> Download Certificate
                   </button>
                 </div>
-          </div>
-        </div>
+              </div>
+            </div>
           )}
         </>
       )}
