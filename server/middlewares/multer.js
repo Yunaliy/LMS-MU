@@ -28,9 +28,9 @@ const storage = multer.diskStorage({
     
     // Ensure the directory exists
     try {
-    fs.mkdirSync(uploadPath, { recursive: true });
+      fs.mkdirSync(uploadPath, { recursive: true });
       console.log('Upload directory created/verified:', uploadPath);
-    cb(null, uploadPath);
+      cb(null, uploadPath);
     } catch (error) {
       console.error('Error creating upload directory:', error);
       cb(error);
@@ -38,7 +38,7 @@ const storage = multer.diskStorage({
   },
   filename: function (req, file, cb) {
     try {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
       const filename = uniqueSuffix + path.extname(file.originalname);
       console.log('Generated filename:', filename);
       cb(null, filename);
@@ -53,31 +53,31 @@ export const upload = multer({
   storage: storage,
   fileFilter: (req, file, cb) => {
     try {
-    if (file.fieldname === 'file') {
-      // For lecture files
-      if (file.mimetype.startsWith('video/') || 
-          file.mimetype === 'application/pdf' ||
-          file.mimetype.includes('audio/')) {
-        cb(null, true);
-      } else {
-        cb(new Error('Unsupported file type'), false);
-      }
-    } else if (file.fieldname === 'image') {
+      if (file.fieldname === 'file') {
+        // For lecture files
+        if (file.mimetype.startsWith('video/') || 
+            file.mimetype === 'application/pdf' ||
+            file.mimetype.includes('audio/')) {
+          cb(null, true);
+        } else {
+          cb(new Error('Unsupported file type'), false);
+        }
+      } else if (file.fieldname === 'image') {
         // For course images
-      if (file.mimetype.startsWith('image/')) {
-        cb(null, true);
+        if (file.mimetype.startsWith('image/')) {
+          cb(null, true);
+        } else {
+          cb(new Error('Please upload an image file'), false);
+        }
       } else {
-        cb(new Error('Please upload an image file'), false);
+        cb(new Error('Unknown field name'), false);
       }
-    } else {
-      cb(new Error('Unknown field name'), false);
-    }
     } catch (error) {
       console.error('Error in file filter:', error);
       cb(error);
     }
   },
   limits: {
-    fileSize: 50 * 1024 * 1024 // 50MB file size limit
+    fileSize: 1024 * 1024 * 1024 // 1GB file size limit
   }
 });

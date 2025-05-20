@@ -29,8 +29,8 @@ dotenv.config();
 const app = express();
 
 // Middlewares
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '1gb' }));
+app.use(express.urlencoded({ extended: true, limit: '1gb' }));
 app.use(
   cors({
     origin: ['http://localhost:5173', 'http://localhost:3000'],

@@ -23,6 +23,11 @@ const EditLectureModal = ({ lecture, onClose, onUpdate }) => {
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
     if (selectedFile) {
+      // Check file size (1GB = 1024 * 1024 * 1024 bytes)
+      if (selectedFile.size > 1024 * 1024 * 1024) {
+        toast.error('File size should be less than 1GB');
+        return;
+      }
       setFile(selectedFile);
     }
   };

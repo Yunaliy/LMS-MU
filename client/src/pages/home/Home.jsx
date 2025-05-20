@@ -6,6 +6,7 @@ import { IoMdClose } from 'react-icons/io';
 import { UserData } from "../../context/UserContext";
 import "./home.css";
 import Testimonials from "../../components/testimonials/Testimonials";
+import HighRatedCourses from "./HighRatedCourses";
 
 const TELEGRAM_USERNAME = 'aliyrida';
 
@@ -50,7 +51,7 @@ const Home = () => {
       handleSend();
     }
   };
-
+  
   const features = [
     {
       icon: <FaGraduationCap />,
@@ -89,6 +90,8 @@ const Home = () => {
             </div>
           </div>
         </section>
+
+        <HighRatedCourses />
 
         {/* Features Section */}
         <section className="section features-section">
