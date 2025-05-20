@@ -33,6 +33,7 @@ import AdminRoute from "./components/AdminRoute";
 import AdminProfile from './admin/Profile/AdminProfile';
 import AdminLectureManager from './admin/Lectures/AdminLectureManager';
 import CourseDetailedDescription from "./pages/coursedescription/CourseDetailedDescription";
+import PaymentReports from "./admin/Payment/PaymentReports";
 
 // Wrapper component to conditionally render Header and Footer
 const Layout = ({ children }) => {
@@ -75,7 +76,12 @@ const LectureRouteWrapper = ({ user }) => {
   return <Lecture user={user} />;
 };
 
-const App = () => {
+const CourseRedirectWrapper = () => {
+  const { id } = useParams();
+  return <Navigate to={`/course/${id}/details`} replace />;
+};
+
+const AppContent = () => {
   const { isAuth, user, loading } = UserData();
 
   if (loading) {
@@ -88,148 +94,162 @@ const App = () => {
   }
 
   return (
-    <BrowserRouter>
-      <Layout>
-        <Routes>
-          {/* Home route with admin protection */}
-          <Route 
-            path="/" 
-            element={
-              isAuth && user?.role === "admin" ? (
-                <Navigate to="/admin/dashboard" />
-              ) : (
-                <Home />
-              )
-            } 
-          />
+    <Layout>
+      <Routes>
+        {/* Home route with admin protection */}
+        <Route 
+          path="/" 
+          element={
+            isAuth && user?.role === "admin" ? (
+              <Navigate to="/admin/dashboard" />
+            ) : (
+              <Home />
+            )
+          } 
+        />
 
-          {/* Other public routes */}
-            <Route path="/about" element={<About />} />
-            <Route path="/courses" element={<Courses />} />
-          <Route path="/login" element={isAuth ? <Navigate to={user?.role === "admin" ? "/admin/dashboard" : "/"} /> : <Login />} />
-          <Route path="/register" element={isAuth ? <Navigate to={user?.role === "admin" ? "/admin/dashboard" : "/"} /> : <Register />} />
-          <Route path="/verify" element={isAuth ? <Navigate to={user?.role === "admin" ? "/admin/dashboard" : "/"} /> : <Verify />} />
-            <Route
-              path="/account"
-              element={isAuth ? <Account user={user} /> : <Login />}
-            />
-            <Route
-              path="/course/:id/details"
-              element={<CourseDetailedDescription />}
-            />
-            <Route
-              path="/course/:id"
-              element={<Navigate to="/course/:id/details" replace />}
-            />
-            <Route
-              path="/payment-success"
-              element={<PaymentSuccess user={user} />}
-            />
-            <Route
-              path="/dashboard"
-              element={isAuth ? <Dashbord user={user} /> : <Login />}
-            />
-            <Route
-              path="/course/study/:id"
-            element={isAuth ? <CourseStudyWrapper user={user} /> : <Login />}
-          />
-          <Route
-            path="/admin/course/study/:id"
-            element={
-              <AdminRoute>
-                <CourseStudy user={user} isAdminView={true} />
-              </AdminRoute>
-            }
-            />
-            <Route
-              path="/lectures/:id"
-            element={isAuth ? <LectureRouteWrapper user={user} /> : <Login />}
-          />
-          <Route
-            path="/admin/lectures/:id"
-            element={
-              <AdminRoute>
-                <AdminLectureManager />
-              </AdminRoute>
-            }
-            />
-            <Route
-              path="/admin/dashboard"
-              element={
-              <AdminRoute>
-                <AdminDashbord user={user} />
-              </AdminRoute>
-              }
-            />
-            <Route
-              path="/admin/courses"
-              element={
-              <AdminRoute>
-                <AdminCourses user={user} />
-              </AdminRoute>
-              }
-            />
-            <Route
-              path="/admin/users"
-              element={
-              <AdminRoute>
-                <AdminUsers user={user} />
-              </AdminRoute>
-            }
-          />
-          <Route
-            path="/admin/profile"
-            element={
-              <AdminRoute>
-                <AdminProfile />
-              </AdminRoute>
-              }
-            />
-          <Route
-            path="/admin/course/new"
-            element={
-              <AdminRoute>
-                <CourseForm />
-              </AdminRoute>
-            }
-          />
-          <Route
-            path="/admin/course/edit/:id"
-            element={
-              <AdminRoute>
-                <CourseForm />
-              </AdminRoute>
-            }
-          />
-          <Route
-            path="/forgot"
-            element={isAuth ? <Home /> : <ForgotPassword />}
-          />
-          <Route
-            path="/reset"
-            element={isAuth ? <Home /> : <ResetPassword />}
-          />
-          <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route path="/reset-password/:token" element={<ResetPassword />} />
-          <Route
-            path="/course/:courseId/assessment"
-            element={
-              <ProtectedRoute>
-                <TakeAssessment />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/admin/course/:courseId/assessment"
-            element={
-              <AdminRoute>
-                <AssessmentManager />
-              </AdminRoute>
-            }
-          />
-          <Route path="/course/:courseId/certificate" element={<Certificate />} />
-        </Routes>
-      </Layout>
+        {/* Other public routes */}
+        <Route path="/about" element={<About />} />
+        <Route path="/courses" element={<Courses />} />
+        <Route path="/login" element={isAuth ? <Navigate to={user?.role === "admin" ? "/admin/dashboard" : "/"} /> : <Login />} />
+        <Route path="/register" element={isAuth ? <Navigate to={user?.role === "admin" ? "/admin/dashboard" : "/"} /> : <Register />} />
+        <Route path="/verify" element={isAuth ? <Navigate to={user?.role === "admin" ? "/admin/dashboard" : "/"} /> : <Verify />} />
+        <Route
+          path="/account"
+          element={isAuth ? <Account user={user} /> : <Login />}
+        />
+        <Route
+          path="/course/:id/details"
+          element={<CourseDetailedDescription />}
+        />
+        <Route
+          path="/course/:id"
+          element={<CourseRedirectWrapper />}
+        />
+        <Route
+          path="/payment-success"
+          element={<PaymentSuccess user={user} />}
+        />
+        <Route
+          path="/dashboard"
+          element={isAuth ? <Dashbord user={user} /> : <Login />}
+        />
+        <Route
+          path="/course/study/:id"
+          element={isAuth ? <CourseStudyWrapper user={user} /> : <Login />}
+        />
+        <Route
+          path="/admin/course/study/:id"
+          element={
+            <AdminRoute>
+              <CourseStudy user={user} isAdminView={true} />
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/lectures/:id"
+          element={isAuth ? <LectureRouteWrapper user={user} /> : <Login />}
+        />
+        <Route
+          path="/admin/lectures/:id"
+          element={
+            <AdminRoute>
+              <AdminLectureManager />
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/dashboard"
+          element={
+            <AdminRoute>
+              <AdminDashbord user={user} />
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/courses"
+          element={
+            <AdminRoute>
+              <AdminCourses user={user} />
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/users"
+          element={
+            <AdminRoute>
+              <AdminUsers user={user} />
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/profile"
+          element={
+            <AdminRoute>
+              <AdminProfile />
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/course/new"
+          element={
+            <AdminRoute>
+              <CourseForm />
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/course/edit/:id"
+          element={
+            <AdminRoute>
+              <CourseForm />
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/payment-reports"
+          element={
+            <AdminRoute>
+              <PaymentReports />
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/forgot"
+          element={isAuth ? <Home /> : <ForgotPassword />}
+        />
+        <Route
+          path="/reset"
+          element={isAuth ? <Home /> : <ResetPassword />}
+        />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password/:token" element={<ResetPassword />} />
+        <Route
+          path="/course/:courseId/assessment"
+          element={
+            <ProtectedRoute>
+              <TakeAssessment />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/course/:courseId/assessment"
+          element={
+            <AdminRoute>
+              <AssessmentManager />
+            </AdminRoute>
+          }
+        />
+        <Route path="/course/:courseId/certificate" element={<Certificate />} />
+      </Routes>
+    </Layout>
+  );
+};
+
+const App = () => {
+  return (
+    <BrowserRouter>
+      <AppContent />
     </BrowserRouter>
   );
 };

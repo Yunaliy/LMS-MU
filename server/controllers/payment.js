@@ -4,6 +4,10 @@ import { User } from "../models/User.js";
 import { Courses } from "../models/Courses.js";
 import { Progress } from "../models/Progress.js";
 import { createNotification } from "./Notification.js";
+import express from "express";
+import { isAuth, isAdmin } from "../middlewares/isAuth.js";
+
+const router = express.Router();
 
 export const initializePayment = TryCatch(async (req, res) => {
   try {
@@ -186,4 +190,42 @@ export const verifyEnrollment = TryCatch(async (req, res) => {
       message: error.message || 'Payment verification failed'
     });
   }
-}); 
+});
+
+// Get payment reports (admin only)
+export const getPaymentReports = async (req, res) => {
+  try {
+    const payments = await Payment.find()
+      .populate('user', 'name email')
+      .populate('course', 'title')
+      .sort({ createdAt: -1 });
+
+    // Calculate summary statistics
+    const totalRevenue = payments.reduce((sum, payment) => sum + payment.amount, 0);
+    const pendingPayments = payments.filter(p => p.status === 'pending').length;
+    const totalTransactions = payments.length;
+    const activeSubscriptions = payments.filter(p => p.status === 'completed').length;
+
+    res.status(200).json({
+      success: true,
+      data: {
+        payments,
+        summary: {
+          totalRevenue,
+          pendingPayments,
+          totalTransactions,
+          activeSubscriptions
+        }
+      }
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
+router.get("/reports", isAuth, isAdmin, getPaymentReports);
+
+export default router; 
