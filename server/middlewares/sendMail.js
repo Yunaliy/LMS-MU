@@ -132,7 +132,7 @@ export const sendForgotMail = async (subject, data) => {
       max-width: 600px;
     }
     h1 {
-      color: #5a2d82;
+      color:#d97706; ;
     }
     p {
       color: #666666;
@@ -141,7 +141,7 @@ export const sendForgotMail = async (subject, data) => {
       display: inline-block;
       padding: 15px 25px;
       margin: 20px 0;
-      background-color: #5a2d82;
+      background-color: #d97706;;
       color: white;
       text-decoration: none;
       border-radius: 4px;
@@ -167,7 +167,7 @@ export const sendForgotMail = async (subject, data) => {
     <p>If you did not request this, please ignore this email.</p>
     <p>This link will expire in 5 minutes.</p>
     <div class="footer">
-      <p>Thank you,<br>E-Learning Team</p>
+      <p>Thank you,<br>Medinetul Uloom Team</p>
     </div>
   </div>
 </body>
@@ -199,7 +199,7 @@ const generatePDF = async (data) => {
         margin: 50,
         info: {
           Title: 'Course Enrollment Receipt',
-          Author: 'E-Learning Platform',
+          Author: 'Medinetul Uloom',
           Subject: 'Course Enrollment Confirmation'
         }
       });
@@ -216,7 +216,7 @@ const generatePDF = async (data) => {
 
       // Add logo to PDF with proper error handling
       try {
-        const logoPath = path.join(__dirname, '../../client/public/logo.jpg');
+        const logoPath = path.join(__dirname, '../../client/public/logo3.png');
         if (fs.existsSync(logoPath)) {
           doc.image(logoPath, 50, 50, { width: 80 })
              .moveDown(1);
@@ -232,7 +232,7 @@ const generatePDF = async (data) => {
         .fontSize(28)
         .font('Helvetica-Bold')
         .fillColor('#b4690e')
-        .text('E-LEARNING PLATFORM', { align: 'center' })
+        .text('MEDINETUL ULOOM', { align: 'center' })
         .moveDown(0.5)
         .fontSize(20)
         .text('ENROLLMENT RECEIPT', { align: 'center' })
@@ -295,7 +295,7 @@ const generatePDF = async (data) => {
       currentY += lineHeight;
       addDetailRow('Status:', data.status, currentY);
       currentY += lineHeight;
-      addDetailRow('Course URL:', `${process.env.FRONTEND_URL}/course/${data.course._id}`, currentY);
+      addDetailRow('Course ID:', data.course._id, currentY);
 
       // Add decorative footer
       doc
@@ -417,56 +417,30 @@ export const sendReceiptMail = async (email, data) => {
     <div class="email-container">
         <div class="header">
             <img src="cid:logo" alt="Logo" class="logo">
-            <h1 style="color: #b4690e; margin: 0;">Enrollment Confirmation</h1>
+            <h1 style="color: #b4690e; margin: 0;">Enrollment Confirmed</h1>
         </div>
 
         <div class="content">
-            <p>Dear ${data.userName},</p>
-            
-            <p>Thank you for enrolling in our course. Your enrollment has been successfully processed.</p>
-
             <div class="confirmation-box">
-                <h2 style="color: #b4690e; margin-top: 0;">Enrollment Details</h2>
-                <div class="details">
-                    <div class="detail-row">
-                        <span class="label">Course:</span> ${data.course.title}
-                    </div>
-                    <div class="detail-row">
-                        <span class="label">Transaction ID:</span> ${data.transactionId}
-                    </div>
-                    <div class="detail-row">
-                        <span class="label">Date:</span> ${new Date(data.createdAt).toLocaleDateString()}
-                    </div>
-                    <div class="detail-row">
-                        <span class="label">Amount Paid:</span> ETB ${data.amount}
-                    </div>
-                    <div class="detail-row">
-                        <span class="label">Payment Method:</span> ${data.paymentMethod}
-                    </div>
-                    <div class="detail-row">
-                        <span class="label">Status:</span> <span style="color: #2ecc71;">${data.status}</span>
-                    </div>
-                </div>
+                <p>Thank you for enrolling in <strong>${data.course.title}</strong>!</p>
+                <p>We have emailed you a confirmation message and receipt to your email. Further communication will be through your email.</p>
             </div>
-
-            <p>You can now access your course by clicking the button below:</p>
-            
-            <div style="text-align: center;">
-                <a href="${process.env.FRONTEND_URL}/course/${data.course._id}" class="cta-button">Access Course</a>
+            <div class="details">
+                <div class="detail-row"><span class="label">Transaction ID:</span> ${data.transactionId}</div>
+                <div class="detail-row"><span class="label">Date:</span> ${new Date(data.createdAt).toLocaleDateString()}</div>
+                <div class="detail-row"><span class="label">Course Title:</span> ${data.course.title}</div>
+                <div class="detail-row"><span class="label">Course ID:</span> ${data.course._id}</div>
+                <div class="detail-row"><span class="label">Amount Paid:</span> ETB ${data.amount}</div>
+                <div class="detail-row"><span class="label">Payment Method:</span> ${data.paymentMethod}</div>
+                <div class="detail-row"><span class="label">Status:</span> ${data.status}</div>
             </div>
-
-            <div class="pdf-notice">
-                <p>A PDF copy of your enrollment receipt has been attached to this email for your records.</p>
-            </div>
-
-            <p>If you have any questions or need assistance, please don't hesitate to contact our support team.</p>
-
-            <p>Best regards,<br>E-Learning Platform Team</p>
+            <a href="${process.env.FRONTEND_URL}/course/${data.course._id}" class="cta-button">Start Learning</a>
+            <p>A PDF copy of your enrollment receipt has been attached to this email for your records.</p>
         </div>
 
         <div class="footer">
-            <p>This is an automated message, please do not reply to this email.</p>
-            <p>© ${new Date().getFullYear()} E-Learning Platform. All rights reserved.</p>
+            <p>This is an automated message. Please do not reply directly to this email.</p>
+            <p>&copy; ${new Date().getFullYear()} Medinetul Uloom. All rights reserved.</p>
         </div>
     </div>
 </body>

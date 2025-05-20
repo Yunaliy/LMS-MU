@@ -38,6 +38,7 @@ const schema = new mongoose.Schema(
       of: Boolean,
       default: new Map()
     },
+    resetPasswordToken: String,
     resetPasswordExpire: Date,
   },
   {

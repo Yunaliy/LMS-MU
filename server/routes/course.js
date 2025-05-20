@@ -7,7 +7,10 @@ import {
   paymentVerification,
   createCourse,
   updateCourse,
-  deleteCourse
+  deleteCourse,
+  addOrUpdateRating,
+  getMyCourseRating,
+  deleteMyCourseRating
 } from "../controllers/course.js";
 import { isAuth, isAdmin } from "../middlewares/isAuth.js";
 import { upload } from "../middlewares/multer.js";
@@ -27,5 +30,10 @@ router.post("/verification/:id", isAuth, paymentVerification);
 router.post("/admin/course/new", isAuth, isAdmin, upload.single('image'), createCourse);
 router.put("/course/:id", isAuth, isAdmin, upload.single('image'), updateCourse);
 router.delete("/course/:id", isAuth, isAdmin, deleteCourse);
+
+// Rating routes (require authentication)
+router.post("/course/:courseId/rating", isAuth, addOrUpdateRating);
+router.get("/course/:courseId/rating/my", isAuth, getMyCourseRating);
+router.delete("/course/:courseId/rating/my", isAuth, deleteMyCourseRating);
 
 export default router;

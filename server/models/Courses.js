@@ -30,6 +30,14 @@ const schema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  averageRating: {
+    type: Number,
+    default: 0,
+  },
+  numberOfRatings: {
+    type: Number,
+    default: 0,
+  },
   createdAt: {
     type: Date,
     default: Date.now,

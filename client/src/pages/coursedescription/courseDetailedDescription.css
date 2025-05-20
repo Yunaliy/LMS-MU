@@ -51,6 +51,22 @@
   color: var(--primary-color);
 }
 
+/* Rating display styles */
+.average-rating-display {
+  display: flex !important;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.average-rating-display .rating-value {
+  font-weight: 600;
+  color: var(--primary-dark);
+}
+
+.average-rating-display .rating-count {
+  color: #666;
+}
+
 .course-description-section {
   margin: 2rem 0;
 }

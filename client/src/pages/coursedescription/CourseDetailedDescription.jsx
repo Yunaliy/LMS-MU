@@ -8,6 +8,8 @@ import toast from 'react-hot-toast';
 import { FaLock, FaPlay, FaClock, FaBook, FaUsers, FaInfinity, FaTimes } from 'react-icons/fa';
 import './courseDetailedDescription.css';
 import Loading from '../../components/Loading';
+import StarRating from '../../components/StarRating/StarRating.jsx';
+import RatingDialog from '../../components/RatingDialog/RatingDialog.jsx';
 
 const VideoPreviewDialog = ({ lecture, onClose }) => {
   if (!lecture) return null;
@@ -236,6 +238,19 @@ const CourseDetailedDescription = () => {
               <span><FaClock /> {course.duration} weeks</span>
               <span><FaBook /> {lectures.length} lectures</span>
               <span><FaInfinity /> Full lifetime access</span>
+              {(course.averageRating !== undefined && course.averageRating !== null) && (
+                <span className="average-rating-display">
+                  <StarRating 
+                    rating={course.averageRating}
+                    size={18}
+                    color="var(--primary-color)"
+                    interactive={false}
+                    average={true}
+                  />
+                  <span className="rating-value">{course.averageRating.toFixed(1)}</span>
+                  <span className="rating-count">({course.numberOfRatings} ratings)</span>
+                </span>
+              )}
             </div>
           </div>
 
@@ -272,7 +287,7 @@ const CourseDetailedDescription = () => {
                   onClick={() => navigate(`/course/study/${course._id}`)}
                   className="primary-button"
                 >
-                  Go to Course
+                  View Course
                 </button>
               ) : (
                 <button 

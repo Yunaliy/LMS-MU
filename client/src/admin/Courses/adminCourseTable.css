@@ -75,14 +75,14 @@
   color: #2e7d32;
 }
 
-.edit-btn {
-  background-color: #fff3e0;
-  color: #f57c00;
+.admin-course-table .edit-btn {
+  background-color: var(--secondary-dark) ;
+  color: #f1f0f0;
 }
 
-.delete-btn {
-  background-color: #ffebee;
-  color: #c62828;
+.admin-course-table .delete-btn {
+  background-color:  #c62828;
+  color: #ffebee;
 }
 
 .manage-btn:hover {
@@ -93,13 +93,13 @@
   background-color: #c8e6c9;
 }
 
-.edit-btn:hover {
+.admin-course-table .edit-btn:hover {
   background-color: var(--secondary-color);
   color: white;
 }
 
-.delete-btn:hover {
-  background-color: #f0acb2;
+.admin-course-table .delete-btn:hover {
+  background-color: #fd0505;
   color: white;
 }
 

@@ -16,6 +16,7 @@
     "axios": "^1.7.0",
     "bootstrap": "^5.3.3",
     "canvas-confetti": "^1.9.3",
+    "google-auth-library": "^9.15.1",
     "jspdf": "^3.0.1",
     "jspdf-autotable": "^5.0.2",
     "lucide-react": "^0.510.0",

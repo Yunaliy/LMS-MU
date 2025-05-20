@@ -8,9 +8,13 @@ import { fileURLToPath } from 'url';
 import fs from 'fs';
 import Course from '../models/Course.js';
 import { Progress } from '../models/Progress.js';
+import { OAuth2Client } from 'google-auth-library';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+
 export const register = TryCatch(async (req, res) => {
   const { email, name, password } = req.body;
   const image = req.file;
@@ -218,9 +222,12 @@ export const forgotPassword = TryCatch(async (req, res) => {
   }
 
   try {
-    const token = jwt.sign({ _id: user._id }, process.env.JWT_SECRET, {
-      expiresIn: '5m',
-    });
+    // Generate token with 5 minutes expiration
+    const token = jwt.sign(
+      { _id: user._id },
+      process.env.JWT_SECRET,
+      { expiresIn: '5m' }
+    );
 
     const data = {
       email,
@@ -230,6 +237,8 @@ export const forgotPassword = TryCatch(async (req, res) => {
 
     await sendForgotMail('Password Reset Request', data);
 
+    // Store token expiration time
+    user.resetPasswordToken = token;
     user.resetPasswordExpire = Date.now() + 5 * 60 * 1000; // 5 minutes
     await user.save();
 
@@ -248,7 +257,8 @@ export const forgotPassword = TryCatch(async (req, res) => {
 
 export const resetPassword = TryCatch(async (req, res) => {
   try {
-    const { token, password } = req.body;
+    const { token } = req.params;
+    const { password } = req.body;
 
     if (!token || !password) {
       return res.status(400).json({
@@ -257,36 +267,24 @@ export const resetPassword = TryCatch(async (req, res) => {
       });
     }
 
-    // Verify the token using JWT_SECRET instead of Forgot_Secret
-    const decodedData = jwt.verify(token, process.env.JWT_SECRET);
-
-    const user = await User.findById(decodedData._id);
+    // Find user by reset token
+    const user = await User.findOne({
+      resetPasswordToken: token,
+      resetPasswordExpire: { $gt: Date.now() }
+    });
 
     if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: 'User not found',
-      });
-    }
-
-    if (!user.resetPasswordExpire) {
       return res.status(400).json({
         success: false,
-        message: 'Reset token has expired',
-      });
-    }
-
-    if (user.resetPasswordExpire < Date.now()) {
-      return res.status(400).json({
-        success: false,
-        message: 'Reset token has expired',
+        message: 'Invalid or expired reset token',
       });
     }
 
     // Hash the new password
     const hashedPassword = await bcrypt.hash(password, 10);
     user.password = hashedPassword;
-    user.resetPasswordExpire = null;
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpire = undefined;
 
     await user.save();
 
@@ -296,12 +294,6 @@ export const resetPassword = TryCatch(async (req, res) => {
     });
   } catch (error) {
     console.error('Error in resetPassword:', error);
-    if (error.name === 'JsonWebTokenError') {
-      return res.status(400).json({
-        success: false,
-        message: 'Invalid or expired reset token',
-      });
-    }
     res.status(500).json({
       success: false,
       message: 'Failed to reset password. Please try again.',
@@ -400,5 +392,94 @@ export const getAllUsers = TryCatch(async (req, res) => {
   res.status(200).json({
     success: true,
     users
+  });
+});
+
+export const googleAuth = TryCatch(async (req, res) => {
+  const { code } = req.body; // Removed client_id and redirect_uri from request body
+
+  // Validate authorization code
+  if (!code) {
+    console.error('No authorization code provided');
+    return res.status(400).json({
+      success: false,
+      message: 'Authorization code is required'
+    });
+  }
+
+  try {
+    // Exchange authorization code for tokens
+    console.log('Exchanging code for tokens...');
+    const { tokens } = await client.getToken({
+      code,
+      client_id: process.env.GOOGLE_CLIENT_ID,
+      client_secret: process.env.GOOGLE_CLIENT_SECRET,
+      redirect_uri: process.env.GOOGLE_REDIRECT_URI
+    });
+
+    // Verify we got an ID token
+    if (!tokens.id_token) {
+      throw new Error('No ID token received from Google');
+    }
+
+    // Verify the ID token (more secure than using access token)
+    const ticket = await client.verifyIdToken({
+      idToken: tokens.id_token,
+      audience: process.env.GOOGLE_CLIENT_ID
+    });
+
+    const { name, email, picture } = ticket.getPayload();
+
+    // Find or create user
+    let user = await User.findOne({ email });
+    
+    if (!user) {
+      user = await User.create({
+        name,
+        email,
+        image: picture,
+        password: Math.random().toString(36).slice(-8), // Random password
+        verified: true
+      });
+      console.log('New user created:', email);
+    }
+
+    // Generate JWT token
+    const authToken = jwt.sign(
+      { _id: user._id },
+      process.env.JWT_SECRET,
+      { expiresIn: '15d' }
+    );
+
+    // Return response
+    res.status(200).json({
+      success: true,
+      token: authToken,
+      user: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        image: user.image,
+        subscription: user.subscription || [],
+      }
+    });
+
+  } catch (error) {
+    console.error('Google authentication error:', error);
+    
+    const statusCode = error.message.includes('invalid_grant') ? 401 : 500;
+    
+    res.status(statusCode).json({
+      success: false,
+      message: `Google authentication failed: ${error.message.replace('invalid_grant: ', '')}`
+    });
+  }
+});
+
+export const getGoogleClientId = TryCatch(async (req, res) => {
+  res.status(200).json({
+    success: true,
+    clientId: process.env.GOOGLE_CLIENT_ID
   });
 });

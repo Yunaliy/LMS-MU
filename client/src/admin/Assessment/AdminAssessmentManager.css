@@ -1,0 +1,20 @@
+// Add increased specificity for edit and delete buttons
+.admin-assessment-manager .assessment-item .edit-btn {
+    background-color: #fff3e0;
+    color: #f57c00;
+}
+
+.admin-assessment-manager .assessment-item .delete-btn {
+    background-color: #ffebee;
+    color: #c62828;
+}
+
+.admin-assessment-manager .assessment-item .edit-btn:hover {
+    background-color: var(--secondary-color);
+    color: white;
+}
+
+.admin-assessment-manager .assessment-item .delete-btn:hover {
+    background-color: #f0acb2;
+    color: white;
+} 

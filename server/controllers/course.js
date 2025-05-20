@@ -5,20 +5,26 @@ import { User } from "../models/User.js";
 // import crypto from "crypto";
 import { Payment } from "../models/Payment.js";
 import { Progress } from "../models/Progress.js";
+import { Rating } from "../models/Rating.js";
 import fs from "fs";
 import { createNotification } from "./Notification.js";
 import path from "path";
 import { promises as fsPromises } from 'fs';
 
 export const getAllCourses = TryCatch(async (req, res) => {
-  const courses = await Courses.find();
+  const courses = await Courses.find().lean();
   res.json({
-    courses,
+    courses: courses.map(course => ({
+      ...course,
+      averageRating: course.averageRating || 0,
+      numberOfRatings: course.numberOfRatings || 0
+    }))
   });
 });
 
 export const getSingleCourse = TryCatch(async (req, res) => {
-  const course = await Courses.findById(req.params.id);
+  // Explicitly select averageRating and numberOfRatings
+  const course = await Courses.findById(req.params.id).select('+averageRating +numberOfRatings');
 
   if (!course) {
     return res.status(404).json({
@@ -30,10 +36,12 @@ export const getSingleCourse = TryCatch(async (req, res) => {
   // Fetch lectures for this course
   const lectures = await Lecture.find({ course: req.params.id });
   
-  // Add lectures to the course object
+  // Add lectures and rating info to the course object
   const courseWithLectures = {
     ...course.toObject(),
-    lectures: lectures
+    lectures: lectures,
+    averageRating: course.averageRating,
+    numberOfRatings: course.numberOfRatings,
   };
 
   res.json({
@@ -479,6 +487,132 @@ export const deleteCourse = TryCatch(async (req, res) => {
   res.json({
     success: true,
     message: "Course deleted successfully"
+  });
+});
+
+// Controller to add or update a course rating
+export const addOrUpdateRating = TryCatch(async (req, res) => {
+  const { courseId } = req.params;
+  const { rating } = req.body;
+  const userId = req.user._id;
+
+  // Validate rating value
+  if (rating < 1 || rating > 5) {
+    return res.status(400).json({
+      success: false,
+      message: "Rating must be between 1 and 5"
+    });
+  }
+
+  // Check if the user has purchased the course
+  const user = await User.findById(userId);
+  if (!user || !user.subscription.includes(courseId)) {
+    return res.status(403).json({
+      success: false,
+      message: "You must purchase this course to rate it"
+    });
+  }
+
+  let existingRating = await Rating.findOne({ user: userId, course: courseId });
+  const course = await Courses.findById(courseId);
+
+  if (!course) {
+    return res.status(404).json({ success: false, message: "Course not found" });
+  }
+
+  if (existingRating) {
+    // Update existing rating
+    const oldRating = existingRating.rating;
+    existingRating.rating = rating;
+    await existingRating.save();
+
+    // Update course average rating
+    const totalRating = (course.averageRating * course.numberOfRatings) - oldRating + rating;
+    course.averageRating = totalRating / course.numberOfRatings;
+  } else {
+    // Add new rating
+    await Rating.create({
+      user: userId,
+      course: courseId,
+      rating: rating,
+    });
+
+    // Update course average rating and number of ratings
+    const totalRating = (course.averageRating * course.numberOfRatings) + rating;
+    course.numberOfRatings += 1;
+    course.averageRating = totalRating / course.numberOfRatings;
+  }
+
+  await course.save();
+
+  res.status(200).json({
+    success: true,
+    message: "Rating added/updated successfully",
+    averageRating: course.averageRating,
+    numberOfRatings: course.numberOfRatings,
+  });
+});
+
+// Controller to get a user's rating for a course
+export const getMyCourseRating = TryCatch(async (req, res) => {
+  const { courseId } = req.params;
+  const userId = req.user._id;
+
+  const rating = await Rating.findOne({ user: userId, course: courseId });
+
+  if (!rating) {
+    return res.status(404).json({
+      success: false,
+      message: "Rating not found",
+      rating: null,
+    });
+  }
+
+  res.status(200).json({
+    success: true,
+    rating: rating.rating,
+  });
+});
+
+// Controller to delete a user's rating for a course
+export const deleteMyCourseRating = TryCatch(async (req, res) => {
+  const { courseId } = req.params;
+  const userId = req.user._id;
+
+  const ratingToDelete = await Rating.findOneAndDelete({ user: userId, course: courseId });
+
+  if (!ratingToDelete) {
+    return res.status(404).json({
+      success: false,
+      message: "Rating not found"
+    });
+  }
+
+  const course = await Courses.findById(courseId);
+
+  if (!course) {
+     // This case should ideally not happen if the rating existed, but good to handle
+    return res.status(404).json({ success: false, message: "Course not found" });
+  }
+
+  // Update course average rating and number of ratings
+  if (course.numberOfRatings > 1) {
+    course.averageRating = 
+      ((course.averageRating * course.numberOfRatings) - ratingToDelete.rating) / (course.numberOfRatings - 1);
+    course.numberOfRatings -= 1;
+  } else {
+    // If this was the only rating, reset to 0
+    course.averageRating = 0;
+    course.numberOfRatings = 0;
+  }
+
+  await course.save();
+
+  res.status(200).json({
+    success: true,
+    message: "Rating deleted successfully",
+    averageRating: course.averageRating,
+    numberOfRatings: course.numberOfRatings,
   });
 });
 
