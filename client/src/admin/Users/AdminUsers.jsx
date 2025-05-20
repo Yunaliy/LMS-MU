@@ -423,7 +423,7 @@ const AdminUsers = ({ user }) => {
           <div className="card-header d-flex justify-content-between align-items-center">
             <h3 className="mb-0">
               <FaUserCog className="me-2" />
-              User Management
+              Students Management
             </h3>
             <button 
               onClick={fetchUsers} 

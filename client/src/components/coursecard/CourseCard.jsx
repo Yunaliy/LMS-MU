@@ -225,7 +225,7 @@ const CourseCard = ({ course: propCourse }) => {
 
   if (isLoading) {
     return <CourseCardSkeleton />;
-  }
+    }
 
   const isEnrolled = user?.subscription?.includes(course._id);
   const isCoursesPage = location.pathname === '/courses';

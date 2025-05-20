@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import "./lecture.css";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import axios from "axios";
 import { server } from "../../config";
 import Loading from "../../components/Loading";
@@ -15,6 +15,8 @@ import { BsChevronLeft } from "react-icons/bs";
 
 
 const UserLecture = ({ initialLectureId, isAdmin }) => {
+  const [searchParams] = useSearchParams();
+  const urlLectureId = searchParams.get('lectureId');
   const { user } = UserData();
   const [lectures, setLectures] = useState([]);
   const [lecture, setLecture] = useState(null);
@@ -29,6 +31,7 @@ const UserLecture = ({ initialLectureId, isAdmin }) => {
   const [progress, setProgress] = useState([]);
   const [progressPercentage, setProgressPercentage] = useState(0);
   const [isCompleted, setIsCompleted] = useState(false);
+  const [videoTimestamp, setVideoTimestamp] = useState(0);
   const params = useParams();
   const navigate = useNavigate();
 
@@ -78,13 +81,18 @@ const UserLecture = ({ initialLectureId, isAdmin }) => {
     const fetchInitialData = async () => {
       try {
         setLoading(true);
-        const [lecturesResponse, courseResponse] = await Promise.all([
+        const [lecturesResponse, courseResponse, progressResponse] = await Promise.all([
           axios.get(`${server}/api/lectures/${params.id}`, {
             headers: {
               token: localStorage.getItem("token"),
             },
           }),
           axios.get(`${server}/api/course/${params.id}`, {
+            headers: {
+              token: localStorage.getItem("token"),
+            },
+          }),
+          axios.get(`${server}/api/user/progress?course=${params.id}`, {
             headers: {
               token: localStorage.getItem("token"),
             },
@@ -95,8 +103,23 @@ const UserLecture = ({ initialLectureId, isAdmin }) => {
         setLectLength(lecturesResponse.data.lectures.length);
         setCourseTitle(courseResponse.data.course.title);
 
-        if (initialLectureId) {
-          await fetchLecture(initialLectureId);
+        // Determine which lecture to load
+        let targetLectureId = urlLectureId || initialLectureId;
+        
+        if (!targetLectureId && lecturesResponse.data.lectures.length > 0) {
+          // If no specific lecture is requested, use the first one
+          targetLectureId = lecturesResponse.data.lectures[0]._id;
+        }
+
+        // If there's progress data and a last watched lecture, use that
+        if (progressResponse.data.progress?.[0]?.lastWatchedLecture) {
+          const lastWatched = progressResponse.data.progress[0].lastWatchedLecture;
+          targetLectureId = lastWatched.lectureId;
+          setVideoTimestamp(lastWatched.timestamp || 0);
+        }
+
+        if (targetLectureId) {
+          await fetchLecture(targetLectureId);
         }
         
         setLoading(false);
@@ -109,7 +132,7 @@ const UserLecture = ({ initialLectureId, isAdmin }) => {
     };
 
     fetchInitialData();
-  }, [params.id, navigate]);
+  }, [params.id, navigate, urlLectureId, initialLectureId]);
 
   useEffect(() => {
     if (lectures.length > 0) {
@@ -249,6 +272,38 @@ const UserLecture = ({ initialLectureId, isAdmin }) => {
     }
   };
 
+  // Add function to save video progress
+  const saveVideoProgress = async (currentTime) => {
+    if (!lecture?._id) return;
+
+    try {
+      await axios.post(
+        `${server}/api/user/progress/update`,
+        {
+          courseId: params.id,
+          lectureId: lecture._id,
+          timestamp: currentTime
+        },
+        {
+          headers: {
+            token: localStorage.getItem("token"),
+          },
+        }
+      );
+    } catch (error) {
+      console.error("Error saving video progress:", error);
+    }
+  };
+
+  // Update the video player to handle time updates
+  const handleTimeUpdate = (event) => {
+    const currentTime = event.target.currentTime;
+    // Save progress every 30 seconds
+    if (Math.floor(currentTime) % 30 === 0) {
+      saveVideoProgress(currentTime);
+    }
+  };
+
   const renderFilePreview = () => {
     if (!lecture) return null;
 
@@ -261,13 +316,20 @@ const UserLecture = ({ initialLectureId, isAdmin }) => {
             className="preview-video"
             opts={{
               playerVars: {
-                autoplay: 0,
+                  autoplay: 1,
                 controls: 1,
                 modestbranding: 1,
-                rel: 0
+                  rel: 0,
+                  start: Math.floor(videoTimestamp)
               }
             }}
             onEnd={() => handleLectureCompletion(lecture._id)}
+              onStateChange={(event) => {
+                if (event.data === 1) { // Video is playing
+                  const currentTime = event.target.getCurrentTime();
+                  saveVideoProgress(currentTime);
+                }
+              }}
           />
           </div>
         </div>
@@ -282,6 +344,12 @@ const UserLecture = ({ initialLectureId, isAdmin }) => {
               controls
               src={`${server}/${filePath}`}
                 onEnded={() => handleLectureCompletion(lecture._id)}
+              onTimeUpdate={handleTimeUpdate}
+              onLoadedMetadata={(e) => {
+                if (videoTimestamp > 0) {
+                  e.target.currentTime = videoTimestamp;
+                }
+              }}
           />
           </div>
         </div>
