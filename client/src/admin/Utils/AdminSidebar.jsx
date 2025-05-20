@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { FaHome, FaBook, FaUsers, FaUserCog } from 'react-icons/fa';
+import { FaHome, FaBook, FaUsers, FaUserCog, FaMoneyBillWave } from 'react-icons/fa';
 
 const AdminSidebar = () => {
   const location = useLocation();
@@ -54,6 +54,10 @@ const AdminSidebar = () => {
         <Link to="/admin/users" style={linkStyle('/admin/users')}>
           <FaUsers size={20} />
           <span>Users</span>
+        </Link>
+        <Link to="/admin/payment-reports" style={linkStyle('/admin/payment-reports')}>
+          <FaMoneyBillWave size={20} />
+          <span>Payment Reports</span>
         </Link>
         <Link to="/admin/profile" style={linkStyle('/admin/profile')}>
           <FaUserCog size={20} />
