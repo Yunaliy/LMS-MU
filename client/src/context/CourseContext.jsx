@@ -1,34 +1,56 @@
+import React, { createContext, useContext, useEffect, useState, useCallback } from "react";
 import axios from "axios";
-import { createContext, useContext, useEffect, useState } from "react";
 import { server } from "../config";
+import toast from "react-hot-toast";
 
 const CourseContext = createContext();
 
 export const CourseContextProvider = ({ children }) => {
   const [courses, setCourses] = useState([]);
-  const [course, setCourse] = useState([]);
+  const [course, setCourse] = useState(null);
   const [mycourse, setMyCourse] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [lastUpdate, setLastUpdate] = useState(Date.now());
 
-  async function fetchCourses() {
+  const fetchCourses = useCallback(async (force = false) => {
     try {
-      const { data } = await axios.get(`${server}/api/course/all`);
-      setCourses(data.courses);
-    } catch (error) {
-      console.log(error);
-    }
-  }
+      setLoading(true);
+      setError(null);
 
-  async function fetchCourse(id) {
+      // Add cache-busting parameter if force refresh is requested
+      const url = force 
+        ? `${server}/api/courses/published?t=${Date.now()}`
+        : `${server}/api/courses/published`;
+
+      const { data } = await axios.get(url);
+
+      if (!data.success) {
+        throw new Error(data.message || 'Failed to fetch courses');
+      }
+
+      setCourses(data.courses);
+      setLastUpdate(Date.now());
+    } catch (error) {
+      console.error('Error fetching courses:', error);
+      setError(error.response?.data?.message || error.message);
+      toast.error(error.response?.data?.message || 'Failed to fetch courses');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const fetchCourse = useCallback(async (id) => {
     try {
-      const { data } = await axios.get(`${server}/api/course/${id}`);
+      const { data } = await axios.get(`${server}/api/course/${id}?t=${Date.now()}`);
       setCourse(data.course);
     } catch (error) {
-      console.log(error);
+      console.error('Error fetching course:', error);
+      toast.error('Failed to fetch course details');
     }
-  }
+  }, []);
 
-  async function fetchMyCourse() {
+  const fetchMyCourse = useCallback(async () => {
     try {
       const token = localStorage.getItem("token");
       if (!token) {
@@ -36,21 +58,54 @@ export const CourseContextProvider = ({ children }) => {
         return;
       }
 
-      const { data } = await axios.get(`${server}/api/mycourse`, {
+      const { data } = await axios.get(`${server}/api/mycourse?t=${Date.now()}`, {
         headers: {
           token: token,
         },
       });
 
-      console.log("Fetched enrolled courses:", data.courses.length);
       setMyCourse(data.courses);
     } catch (error) {
       console.error("Error fetching enrolled courses:", error);
       if (error.response?.status === 401) {
-        console.log("Token expired or invalid");
+        toast.error("Please login to view your courses");
       }
     }
-  }
+  }, []);
+
+  const updateCourseStatus = async (courseId, published) => {
+    try {
+      const { data } = await axios.put(
+        `${server}/api/course/${courseId}/publish`,
+        { published },
+        {
+          headers: {
+            token: localStorage.getItem("token"),
+          },
+        }
+      );
+
+      if (data.success) {
+        // Force refresh all course data
+        await Promise.all([
+          fetchCourses(true), // Force refresh public courses
+          fetchMyCourse(),    // Refresh enrolled courses
+        ]);
+
+        // Update single course view if it's the current course
+        if (course?._id === courseId) {
+          await fetchCourse(courseId);
+        }
+
+        toast.success(data.message);
+        return true;
+      }
+    } catch (error) {
+      console.error('Error updating course status:', error);
+      toast.error(error.response?.data?.message || 'Failed to update course status');
+      return false;
+    }
+  };
 
   const updateCourseRating = (courseId, newRating, numberOfRatings) => {
     // Update in courses list
@@ -72,45 +127,45 @@ export const CourseContextProvider = ({ children }) => {
     );
 
     // Update in single course view
-    if (course._id === courseId) {
+    if (course?._id === courseId) {
       setCourse(prevCourse => ({
         ...prevCourse,
         averageRating: newRating,
         numberOfRatings
       }));
     }
-
-    // Force a refresh of all course data
-    setLastUpdate(Date.now());
   };
 
-  // Refresh all course data
-  const refreshCourseData = async () => {
-    await Promise.all([
-      fetchCourses(),
-      fetchMyCourse(),
-      course._id && fetchCourse(course._id)
-    ]);
-    setLastUpdate(Date.now());
-  };
-
+  // Initial data fetch
   useEffect(() => {
     fetchCourses();
     fetchMyCourse();
-  }, []);
+  }, [fetchCourses, fetchMyCourse]);
+
+  // Set up polling for course updates
+  useEffect(() => {
+    const pollInterval = setInterval(() => {
+      fetchCourses();
+    }, 30000); // Poll every 30 seconds
+
+    return () => clearInterval(pollInterval);
+  }, [fetchCourses]);
 
   return (
     <CourseContext.Provider
       value={{
         courses,
-        fetchCourses,
-        fetchCourse,
         course,
         mycourse,
+        loading,
+        error,
+        lastUpdate,
+        fetchCourses,
+        fetchCourse,
         fetchMyCourse,
+        updateCourseStatus,
         updateCourseRating,
-        refreshCourseData,
-        lastUpdate
+        refreshCourses: () => fetchCourses(true)
       }}
     >
       {children}
@@ -118,4 +173,14 @@ export const CourseContextProvider = ({ children }) => {
   );
 };
 
+// For backward compatibility
 export const CourseData = () => useContext(CourseContext);
+
+// New hook-based approach
+export const useCourses = () => {
+  const context = useContext(CourseContext);
+  if (!context) {
+    throw new Error("useCourses must be used within a CourseContextProvider");
+  }
+  return context;
+};

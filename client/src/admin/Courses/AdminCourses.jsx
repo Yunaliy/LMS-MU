@@ -1,54 +1,128 @@
-import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import { server } from '../../config';
 import Layout from '../Utils/Layout';
-import { CourseData } from '../../context/CourseContext';
 import AdminCourseTable from './AdminCourseTable';
-import Loading from '../../components/Loading';
+import toast from 'react-hot-toast';
 import { FaPlus } from 'react-icons/fa';
 import './adminCourses.css';
 
 const AdminCourses = () => {
-  const { courses, loading, fetchCourses } = CourseData();
-  const [searchTerm, setSearchTerm] = useState('');
+  const navigate = useNavigate();
+  const [courses, setCourses] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  const validateToken = () => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      navigate('/login');
+      return false;
+    }
+    return true;
+  };
+
+  const fetchCourses = useCallback(async () => {
+    try {
+      if (!validateToken()) return;
+      
+      setLoading(true);
+      setError(null);
+
+      const { data } = await axios.get(`${server}/api/course/all`, {
+        headers: {
+          token: localStorage.getItem("token"),
+        },
+      });
+
+      if (!data.success) {
+        throw new Error(data.message || 'Failed to fetch courses');
+      }
+
+      // Check if user is admin
+      if (!data.meta?.isAdmin) {
+        navigate('/'); // Redirect non-admin users to home
+        toast.error('Access denied. Admin only.');
+        return;
+      }
+
+      setCourses(data.courses);
+    } catch (error) {
+      console.error('Error fetching courses:', error);
+      const errorMessage = error.response?.data?.message || error.message;
+      setError(errorMessage);
+      
+      // Handle specific error cases
+      if (error.response?.status === 401) {
+        localStorage.removeItem("token"); // Clear invalid token
+        navigate('/login');
+        toast.error('Session expired. Please login again.');
+      } else if (error.response?.status === 403) {
+        navigate('/');
+        toast.error('Access denied. Admin only.');
+      } else {
+        toast.error(errorMessage);
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, [navigate]);
 
   useEffect(() => {
-    fetchCourses();
+    if (validateToken()) {
+      fetchCourses();
+    }
   }, [fetchCourses]);
 
-  const filteredCourses = courses.filter(course =>
-    course.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    course.createdBy.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const handleCoursesUpdate = () => {
+    fetchCourses();
+  };
+
+  if (loading) {
+    return (
+      <Layout>
+        <div className="loading-container">
+          <div className="spinner"></div>
+        </div>
+      </Layout>
+    );
+  }
+
+  if (error) {
+    return (
+      <Layout>
+        <div className="error-container">
+          <h3>Error Loading Courses</h3>
+          <p>{error}</p>
+          <button 
+            className="retry-button"
+            onClick={fetchCourses}
+          >
+            Retry
+          </button>
+        </div>
+      </Layout>
+    );
+  }
 
   return (
     <Layout>
       <div className="admin-courses-container">
         <div className="admin-courses-header">
-          <div className="header-content">
-            <h2 className='course-manage-title'>Course Management</h2>
-            <Link to="/admin/course/new" className="add-course-btn">
-              <FaPlus /> Add New Course
-            </Link>
-          </div>
-          <div className="search-box">
-            <input
-              type="text"
-              placeholder="Search courses..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="search-input"
-            />
-          </div>
+          <h2>Manage Courses</h2>
+          <button 
+            className="add-course-btn"
+            onClick={() => navigate('/admin/course/new')}
+          >
+            <FaPlus /> Add New Course
+          </button>
         </div>
 
-        {loading ? (
-          <Loading />
-        ) : (
-          <AdminCourseTable 
-            courses={filteredCourses} 
-            onCoursesUpdate={fetchCourses}
-          />
-        )}
+        <AdminCourseTable 
+          courses={courses} 
+          onCoursesUpdate={handleCoursesUpdate}
+        />
       </div>
     </Layout>
   );

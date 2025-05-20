@@ -1,6 +1,7 @@
 import express from "express";
 import {
   getAllCourses,
+  getPublishedCourses,
   getSingleCourse,
   getMyCourses,
   checkout,
@@ -10,26 +11,29 @@ import {
   deleteCourse,
   addOrUpdateRating,
   getMyCourseRating,
-  deleteMyCourseRating
+  deleteMyCourseRating,
+  togglePublish
 } from "../controllers/course.js";
 import { isAuth, isAdmin } from "../middlewares/isAuth.js";
 import { upload } from "../middlewares/multer.js";
 
 const router = express.Router();
 
-// Public routes
-router.get("/course/all", getAllCourses);
+// Public routes - no auth required
+router.get("/courses/published", getPublishedCourses);
+router.get("/course/all", isAuth, getAllCourses);
 router.get("/course/:id", getSingleCourse);
 
-// User routes
+// User routes - require authentication
 router.get("/mycourse", isAuth, getMyCourses);
 router.post("/course/checkout/:id", isAuth, checkout);
 router.post("/verification/:id", isAuth, paymentVerification);
 
-// Admin routes
+// Admin routes - require admin access
 router.post("/admin/course/new", isAuth, isAdmin, upload.single('image'), createCourse);
 router.put("/course/:id", isAuth, isAdmin, upload.single('image'), updateCourse);
 router.delete("/course/:id", isAuth, isAdmin, deleteCourse);
+router.put("/course/:id/publish", isAuth, isAdmin, togglePublish);
 
 // Rating routes (require authentication)
 router.post("/course/:courseId/rating", isAuth, addOrUpdateRating);

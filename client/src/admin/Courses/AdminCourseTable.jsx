@@ -4,14 +4,17 @@ import { server } from '../../config';
 import toast from 'react-hot-toast';
 import axios from 'axios';
 import ConfirmationDialog from '../../components/ConfirmationDialog';
-import { FaEdit, FaBook, FaClipboardList, FaTrash } from 'react-icons/fa';
+import { FaEdit, FaBook, FaClipboardList, FaTrash, FaGlobe, FaGlobeAmericas } from 'react-icons/fa';
+import { useCourses } from '../../context/CourseContext';
 import './adminCourseTable.css';
 
 const AdminCourseTable = ({ courses, onCoursesUpdate }) => {
   const navigate = useNavigate();
+  const { updateCourseStatus } = useCourses();
   const [deletingCourseId, setDeletingCourseId] = useState(null);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState(null);
+  const [publishingCourseId, setPublishingCourseId] = useState(null);
 
   const handleManage = (courseId) => {
     navigate(`/admin/lectures/${courseId}`);
@@ -58,6 +61,41 @@ const AdminCourseTable = ({ courses, onCoursesUpdate }) => {
     setSelectedCourse(null);
   };
 
+  const handlePublishToggle = async (course) => {
+    try {
+      setPublishingCourseId(course._id);
+      const success = await updateCourseStatus(course._id, !course.published);
+      
+      if (success) {
+        onCoursesUpdate(); // Refresh admin course list
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Error updating course status');
+    } finally {
+      setPublishingCourseId(null);
+    }
+  };
+
+  const getPublishButtonProps = (course) => {
+    const isPublishing = publishingCourseId === course._id;
+    const hasLectures = Array.isArray(course.lectures) && course.lectures.length > 0;
+    const hasAssessment = course.assessment !== null && course.assessment !== undefined;
+    const canPublish = hasLectures && hasAssessment;
+
+    let tooltipMessage = "";
+    if (!canPublish) {
+      if (!hasLectures) tooltipMessage += "Add at least one lecture. ";
+      if (!hasAssessment) tooltipMessage += "Create an assessment.";
+    }
+
+    return {
+      disabled: isPublishing || (!course.published && !canPublish),
+      title: tooltipMessage || "",
+      className: `publish-btn ${course.published ? 'published' : ''} ${!canPublish ? 'disabled' : ''}`,
+      onClick: () => handlePublishToggle(course)
+    };
+  };
+
   return (
     <>
       <div className="admin-course-table-container">
@@ -68,6 +106,7 @@ const AdminCourseTable = ({ courses, onCoursesUpdate }) => {
               <th>Instructor</th>
               <th>Duration</th>
               <th>Price</th>
+              <th>Status</th>
               <th>Actions</th>
             </tr>
           </thead>
@@ -78,6 +117,15 @@ const AdminCourseTable = ({ courses, onCoursesUpdate }) => {
                 <td>{course.createdBy}</td>
                 <td>{course.duration} weeks</td>
                 <td>${course.price}</td>
+                <td>
+                  <button {...getPublishButtonProps(course)}>
+                    {course.published ? (
+                      <><FaGlobeAmericas /> Published</>
+                    ) : (
+                      <><FaGlobe /> Unpublished</>
+                    )}
+                  </button>
+                </td>
                 <td>
                   <div className="action-buttons">
                     <button

@@ -415,6 +415,39 @@ const CourseStudy = () => {
     }
   };
 
+  const handleContinueLearning = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const { data } = await axios.get(
+        `${server}/api/user/progress?course=${effectiveCourseId}`,
+        {
+          headers: { token }
+        }
+      );
+
+      let targetLectureId;
+      let timestamp = 0;
+
+      if (data.progress && data.progress[0]?.lastWatchedLecture) {
+        // If there's a last watched lecture, use that
+        targetLectureId = data.progress[0].lastWatchedLecture.lectureId;
+        timestamp = data.progress[0].lastWatchedLecture.timestamp || 0;
+      } else if (course?.lectures && course.lectures.length > 0) {
+        // Otherwise, use the first lecture
+        targetLectureId = course.lectures[0]._id;
+      }
+
+      if (targetLectureId) {
+        navigate(`/lectures/${effectiveCourseId}?lectureId=${targetLectureId}&timestamp=${timestamp}`);
+      } else {
+        toast.error('No lectures available in this course');
+      }
+    } catch (error) {
+      console.error('Error fetching progress:', error);
+      toast.error('Failed to load course progress');
+    }
+  };
+
   const AdminView = () => (
     <div className="admin-course-management">
       <h1>Course Management</h1>
@@ -460,28 +493,28 @@ const CourseStudy = () => {
 
         {/* Rating Section */}
         {user?.subscription?.includes(effectiveCourseId) && (
-            <div className="rating-section" onClick={(e) => e.stopPropagation()}> 
-                <StarRating 
-                    rating={userRating}
-                    onRatingClick={() => setShowRatingDialog(true)}
-                    size={20}
-                    color="var(--primary-color)"
-                    interactive={true}
-                />
-                <span className="rating-text">
-                    {userRating !== null ? userRating.toFixed(1) : "Leave Rating"}
-                </span>
-            </div>
+          <div className="rating-section" onClick={(e) => e.stopPropagation()}> 
+            <StarRating 
+              rating={userRating}
+              onRatingClick={() => setShowRatingDialog(true)}
+              size={20}
+              color="var(--primary-color)"
+              interactive={true}
+            />
+            <span className="rating-text">
+              {userRating !== null ? userRating.toFixed(1) : "Leave Rating"}
+            </span>
+          </div>
         )}
 
         <div className="course-actions">
-          <Link
-            to={`/lectures/${course?._id}`}
+          <button
+            onClick={handleContinueLearning}
             className={`action-btn ${isCompleted ? 'completed' : ''}`}
           >
             <FaPlay className="icon" />
             <span>Continue Learning</span>
-          </Link>
+          </button>
 
           <button
             className={`action-btn ${!isCompleted ? 'disabled' : ''}`}
@@ -516,16 +549,15 @@ const CourseStudy = () => {
 
         {/* Rating Dialog */}
         {user?.subscription?.includes(effectiveCourseId) && (
-            <RatingDialog 
-                isOpen={showRatingDialog}
-                onClose={() => setShowRatingDialog(false)}
-                currentRating={userRating}
-                onSave={handleSaveRating}
-                onDelete={handleDeleteRating}
-                courseTitle={course?.title}
-            />
+          <RatingDialog 
+            isOpen={showRatingDialog}
+            onClose={() => setShowRatingDialog(false)}
+            currentRating={userRating}
+            onSave={handleSaveRating}
+            onDelete={handleDeleteRating}
+            courseTitle={course?.title}
+          />
         )}
-
       </div>
     );
   };
@@ -589,16 +621,16 @@ const CourseStudy = () => {
 
   return (
     <>
-      {user?.role === "admin" ? (
+            {user?.role === "admin" ? (
         <Layout>
           <div style={{ marginTop: '60px' }}>{content}</div>
         </Layout>
-      ) : (
-        <>
+            ) : (
+              <>
           {content}
           {showCertificateModal && (
             <div className="certificate-modal-overlay">
-              <div className="certificate-modal">
+            <div className="certificate-modal">
                 <div className="certificate-modal-header">
                   <h2 className="certificate-modal-title">Course Certificate - {course?.title}</h2>
                   <button className="certificate-modal-close" onClick={closeCertificateModal}>×</button>
@@ -623,8 +655,8 @@ const CourseStudy = () => {
                     <FaDownload /> Download Certificate
                   </button>
                 </div>
-              </div>
-            </div>
+          </div>
+        </div>
           )}
         </>
       )}

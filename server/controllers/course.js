@@ -10,16 +10,106 @@ import fs from "fs";
 import { createNotification } from "./Notification.js";
 import path from "path";
 import { promises as fsPromises } from 'fs';
+import  Assessment  from "../models/Assessment.js";
+
+export const getPublishedCourses = TryCatch(async (req, res) => {
+  try {
+    // Only fetch published courses
+    const courses = await Courses.find({ published: true })
+      .lean()
+      .select('-__v');
+
+    // Get basic course details without sensitive information
+    const coursesWithDetails = await Promise.all(
+      courses.map(async (course) => {
+        const [lectures, assessment] = await Promise.all([
+          Lecture.find({ course: course._id })
+            .select('title isPreview')
+            .lean(),
+          Assessment.findOne({ courseId: course._id })
+            .select('title')
+            .lean(),
+        ]);
+
+        return {
+          ...course,
+          lectures: lectures.map(lecture => ({
+            title: lecture.title,
+            isPreview: lecture.isPreview
+          })),
+          hasAssessment: Boolean(assessment),
+          averageRating: course.averageRating || 0,
+          numberOfRatings: course.numberOfRatings || 0
+        };
+      })
+    );
+
+    res.json({
+      success: true,
+      courses: coursesWithDetails,
+      meta: {
+        count: coursesWithDetails.length
+      }
+    });
+  } catch (error) {
+    console.error("Error in getPublishedCourses:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error fetching published courses",
+      error: error.message
+    });
+  }
+});
 
 export const getAllCourses = TryCatch(async (req, res) => {
-  const courses = await Courses.find().lean();
-  res.json({
-    courses: courses.map(course => ({
-      ...course,
-      averageRating: course.averageRating || 0,
-      numberOfRatings: course.numberOfRatings || 0
-    }))
-  });
+  try {
+    // Check if user exists and has admin role
+    const isAdmin = req.user && req.user.role === 'admin';
+    
+    // Base query - admin sees all, regular users see only published
+    const baseQuery = isAdmin ? {} : { published: true };
+    
+    // Get courses with lean() for better performance
+    const courses = await Courses.find(baseQuery)
+      .lean()
+      .select('-__v'); // Exclude version key
+
+    // Use Promise.all with populate for better performance
+    const coursesWithDetails = await Promise.all(
+      courses.map(async (course) => {
+        const [lectures, assessment] = await Promise.all([
+          Lecture.find({ course: course._id }).select('-__v'),
+          Assessment.findOne({ courseId: course._id }).select('-__v'),
+        ]);
+
+        return {
+          ...course,
+          lectures,
+          assessment: assessment || null, // Ensure assessment is null if not found
+          averageRating: course.averageRating || 0,
+          numberOfRatings: course.numberOfRatings || 0,
+          // For frontend convenience, add flags about publish status
+          canPublish: isAdmin ? Boolean(lectures.length && assessment) : undefined
+        };
+      })
+    );
+
+    res.json({
+      success: true,
+      courses: coursesWithDetails,
+      meta: {
+        count: coursesWithDetails.length,
+        isAdmin: isAdmin
+      }
+    });
+  } catch (error) {
+    console.error("Error in getAllCourses:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error fetching courses",
+      error: error.message
+    });
+  }
 });
 
 export const getSingleCourse = TryCatch(async (req, res) => {
@@ -614,6 +704,121 @@ export const deleteMyCourseRating = TryCatch(async (req, res) => {
     averageRating: course.averageRating,
     numberOfRatings: course.numberOfRatings,
   });
+});
+
+export const updateProgress = TryCatch(async (req, res) => {
+  const { courseId, lectureId, timestamp } = req.body;
+  const userId = req.user._id;
+
+  if (!courseId || !lectureId) {
+    return res.status(400).json({
+      success: false,
+      message: "Course ID and Lecture ID are required"
+    });
+  }
+
+  try {
+    // Find or create progress record
+    let progress = await Progress.findOne({
+      user: userId,
+      course: courseId
+    });
+
+    if (!progress) {
+      progress = new Progress({
+        user: userId,
+        course: courseId,
+        completedLectures: [],
+        lastWatchedLecture: {
+          lectureId,
+          timestamp: timestamp || 0
+        }
+      });
+    } else {
+      // Update last watched lecture
+      progress.lastWatchedLecture = {
+        lectureId,
+        timestamp: timestamp || 0
+      };
+    }
+
+    await progress.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Progress updated successfully",
+      progress
+    });
+  } catch (error) {
+    console.error("Error updating progress:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to update progress",
+      error: error.message
+    });
+  }
+});
+
+export const togglePublish = TryCatch(async (req, res) => {
+  const courseId = req.params.id;
+  const { published } = req.body;
+
+  const course = await Courses.findById(courseId);
+  if (!course) {
+    return res.status(404).json({
+      success: false,
+      message: "Course not found"
+    });
+  }
+
+  // If trying to publish, check requirements
+  if (published) {
+    // Check for lectures
+    const lectureCount = await Lecture.countDocuments({ course: courseId });
+    if (lectureCount === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Cannot publish course: No lectures found"
+      });
+    }
+
+    // Check for assessment
+    const assessment = await Assessment.findOne({ courseId });
+    if (!assessment) {
+      return res.status(400).json({
+        success: false,
+        message: "Cannot publish course: No assessment found"
+      });
+    }
+
+    // If we get here, all requirements are met
+    course.published = true;
+    await course.save();
+
+    res.json({
+      success: true,
+      message: "Course published successfully",
+      course: {
+        ...course.toObject(),
+        lectures: await Lecture.find({ course: courseId }),
+        assessment
+      }
+    });
+  } else {
+    // Unpublishing doesn't require any checks
+    course.published = false;
+    await course.save();
+
+    res.json({
+      success: true,
+      message: "Course unpublished successfully",
+      course: {
+        ...course.toObject(),
+        lectures: await Lecture.find({ course: courseId }),
+        assessment: await Assessment.findOne({ courseId })
+      }
+    });
+  }
 });
 
 

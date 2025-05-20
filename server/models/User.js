@@ -33,6 +33,20 @@ const schema = new mongoose.Schema(
         ref: "Courses",
       },
     ],
+    lastWatchedLecture: {
+      type: Map,
+      of: {
+        lectureId: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "Lecture"
+        },
+        timestamp: {
+          type: Number,
+          default: 0
+        }
+      },
+      default: new Map()
+    },
     receiptSent: {
       type: Map,
       of: Boolean,

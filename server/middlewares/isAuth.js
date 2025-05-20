@@ -4,37 +4,50 @@ import { User } from "../models/User.js";
 export const isAuth = async (req, res, next) => {
   try {
     const token = req.headers.token;
-
-    if (!token)
-      return res.status(403).json({
-        message: "Please Login",
+    
+    if (!token) {
+      return res.status(401).json({
+        success: false,
+        message: "Please login to access this resource"
       });
+    }
 
-    const decodedData = jwt.verify(token, process.env.JWT_SECRET);
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    
+    const user = await User.findById(decoded._id);
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        message: "User not found"
+      });
+    }
 
-    req.user = await User.findById(decodedData._id);
-
+    req.user = user;
+    req.isAdmin = user.role === 'admin';
     next();
   } catch (error) {
-    console.error("Auth error:", error);
-    res.status(500).json({
-      message: "Login First",
-      error: error.message
+    console.error("Auth middleware error:", error);
+    return res.status(401).json({
+      success: false,
+      message: "Invalid or expired token"
     });
   }
 };
 
-export const isAdmin = (req, res, next) => {
+export const isAdmin = async (req, res, next) => {
   try {
-    if (req.user.role !== "admin")
+    if (!req.isAdmin) {
       return res.status(403).json({
-        message: "You are not admin",
+        success: false,
+        message: "Admin access required"
       });
-
+    }
     next();
   } catch (error) {
-    res.status(500).json({
-      message: error.message,
+    console.error("Admin middleware error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Error checking admin status"
     });
   }
 };
