@@ -168,52 +168,55 @@
 }
 
 .course-study-page .course-actions {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 15px;
-  margin-top: 20px;
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-top: 1rem;
 }
 
 .course-study-page .action-btn {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 12px 20px;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
   border: none;
-  border-radius: 5px;
-  background: var(--primary-color);
-  color: #fff;
-  font-weight: 600;
+  border-radius: 0.5rem;
+  background-color: #4a90e2;
+  color: white;
+  font-weight: 500;
   cursor: pointer;
   transition: all 0.3s ease;
-  text-decoration: none;
-  justify-content: center;
 }
 
 .course-study-page .action-btn:hover {
-  background: var(--primary-dark);
+  background-color: #357abd;
 }
 
 .course-study-page .action-btn.disabled {
-  background: #e0e0e0;
-  color: #6a6f73;
+  background-color: #ccc;
   cursor: not-allowed;
 }
 
-.course-study-page .action-btn.enabled {
-  background: #4CAF50;
+.course-study-page .action-btn.completed {
+  background-color: #28a745;
 }
 
-.course-study-page .action-btn.enabled:hover {
-  background: #45a049;
+.course-study-page .action-btn.material-btn {
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+  background-color: #6c757d;
+}
+
+.course-study-page .action-btn.material-btn:hover {
+  background-color: #5a6268;
 }
 
 .course-study-page .action-btn .icon {
-  font-size: 16px;
+  font-size: 1rem;
 }
 
-.course-study-page .action-btn .lock-icon {
-  color: #6a6f73;
+.course-study-page .action-btn.material-btn .icon {
+  font-size: 0.9rem;
 }
 
 /* Admin View Styles */

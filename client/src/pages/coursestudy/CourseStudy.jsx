@@ -16,7 +16,8 @@ import {
   FaCheck,
   FaClipboardCheck,
   FaDownload,
-  FaTimes
+  FaTimes,
+  FaBook
 } from 'react-icons/fa';
 import confetti from 'canvas-confetti';
 import StarRating from '../../components/StarRating/StarRating.jsx';
@@ -448,6 +449,47 @@ const CourseStudy = () => {
     }
   };
 
+  const handleDownloadMaterial = async () => {
+    if (!course?.material) {
+      toast.error('No course material available');
+      return;
+    }
+
+    try {
+      const response = await axios.get(
+        `${server}/uploads/${course.material}`,
+        {
+          responseType: 'blob',
+          headers: {
+            token: localStorage.getItem('token')
+          }
+        }
+      );
+
+      // Create a blob from the PDF data
+      const blob = new Blob([response.data], { type: 'application/pdf' });
+      const url = window.URL.createObjectURL(blob);
+      
+      // Create a temporary link element
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${course.title}_material.pdf`;
+      
+      // Append to body, click, and remove
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      // Clean up the URL object
+      window.URL.revokeObjectURL(url);
+      
+      toast.success('Material downloaded successfully');
+    } catch (error) {
+      console.error('Error downloading material:', error);
+      toast.error('Failed to download material');
+    }
+  };
+
   const AdminView = () => (
     <div className="admin-course-management">
       <h1>Course Management</h1>
@@ -515,6 +557,17 @@ const CourseStudy = () => {
             <FaPlay className="icon" />
             <span>Continue Learning</span>
           </button>
+
+          {course?.material && (
+            <button
+              className="action-btn material-btn"
+              onClick={handleDownloadMaterial}
+              title="Download Course Material"
+            >
+              <FaDownload className="icon" />
+              <span>Material</span>
+            </button>
+          )}
 
           <button
             className={`action-btn ${!isCompleted ? 'disabled' : ''}`}

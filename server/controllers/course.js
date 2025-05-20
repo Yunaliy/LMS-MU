@@ -456,11 +456,13 @@ export const getYourProgress = TryCatch(async (req, res) => {
 export const createCourse = TryCatch(async (req, res) => {
   try {
     const { title, description, price, duration, subtitle, category, createdBy } = req.body;
-    const image = req.file;
+    const image = req.files?.image?.[0];
+    const material = req.files?.material?.[0];
 
     // Validate required fields
     if (!title || !description || !price || !duration) {
       if (image) await fsPromises.unlink(image.path);
+      if (material) await fsPromises.unlink(material.path);
       return res.status(400).json({
         success: false,
         message: "Please provide all required fields"
@@ -476,7 +478,8 @@ export const createCourse = TryCatch(async (req, res) => {
       subtitle,
       category,
       createdBy: createdBy || req.user.name,
-      image: image ? (image.path.replace(/\\/g, '/').split('uploads/').pop()) : undefined
+      image: image ? (image.path.replace(/\\/g, '/').split('uploads/').pop()) : undefined,
+      material: material ? (material.path.replace(/\\/g, '/').split('uploads/').pop()) : undefined
     };
 
     // Create the course
@@ -488,8 +491,11 @@ export const createCourse = TryCatch(async (req, res) => {
       course
     });
   } catch (error) {
-    if (req.file) {
-      await fsPromises.unlink(req.file.path);
+    if (req.files?.image?.[0]) {
+      await fsPromises.unlink(req.files.image[0].path);
+    }
+    if (req.files?.material?.[0]) {
+      await fsPromises.unlink(req.files.material[0].path);
     }
     throw error;
   }
@@ -499,11 +505,13 @@ export const updateCourse = TryCatch(async (req, res) => {
   try {
     const courseId = req.params.id;
     const { title, description, price, duration, subtitle, category, createdBy } = req.body;
-    const image = req.file;
+    const image = req.files?.image?.[0];
+    const material = req.files?.material?.[0];
 
     const course = await Courses.findById(courseId);
     if (!course) {
       if (image) await fsPromises.unlink(image.path);
+      if (material) await fsPromises.unlink(material.path);
       return res.status(404).json({
         success: false,
         message: "Course not found"
@@ -533,6 +541,20 @@ export const updateCourse = TryCatch(async (req, res) => {
       course.image = image.path.replace(/\\/g, '/').split('uploads/').pop();
     }
 
+    // Handle material update
+    if (material) {
+      // Delete old material if it exists
+      if (course.material) {
+        const oldMaterialPath = path.join(process.cwd(), 'uploads', course.material);
+        try {
+          await fsPromises.unlink(oldMaterialPath);
+        } catch (error) {
+          console.error('Error deleting old material:', error);
+        }
+      }
+      course.material = material.path.replace(/\\/g, '/').split('uploads/').pop();
+    }
+
     await course.save();
 
     res.json({
@@ -541,8 +563,11 @@ export const updateCourse = TryCatch(async (req, res) => {
       course
     });
   } catch (error) {
-    if (req.file) {
-      await fsPromises.unlink(req.file.path);
+    if (req.files?.image?.[0]) {
+      await fsPromises.unlink(req.files.image[0].path);
+    }
+    if (req.files?.material?.[0]) {
+      await fsPromises.unlink(req.files.material[0].path);
     }
     throw error;
   }

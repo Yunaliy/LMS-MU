@@ -30,8 +30,16 @@ router.post("/course/checkout/:id", isAuth, checkout);
 router.post("/verification/:id", isAuth, paymentVerification);
 
 // Admin routes - require admin access
-router.post("/admin/course/new", isAuth, isAdmin, upload.single('image'), createCourse);
-router.put("/course/:id", isAuth, isAdmin, upload.single('image'), updateCourse);
+router.post("/admin/course/new", isAuth, isAdmin, upload.fields([
+  { name: 'image', maxCount: 1 },
+  { name: 'material', maxCount: 1 }
+]), createCourse);
+
+router.put("/course/:id", isAuth, isAdmin, upload.fields([
+  { name: 'image', maxCount: 1 },
+  { name: 'material', maxCount: 1 }
+]), updateCourse);
+
 router.delete("/course/:id", isAuth, isAdmin, deleteCourse);
 router.put("/course/:id/publish", isAuth, isAdmin, togglePublish);
 

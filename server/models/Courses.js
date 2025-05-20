@@ -30,6 +30,10 @@ const schema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  material: {
+    type: String,
+    default: null,
+  },
   averageRating: {
     type: Number,
     default: 0,

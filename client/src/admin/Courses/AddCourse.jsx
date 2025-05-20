@@ -49,9 +49,11 @@ const CourseForm = () => {
     price: '',
     createdBy: '',
     duration: '',
-    image: null
+    image: null,
+    material: null
   });
   const [previewImage, setPreviewImage] = useState('');
+  const [materialName, setMaterialName] = useState('');
   const isEditMode = Boolean(id);
 
   useEffect(() => {
@@ -71,7 +73,8 @@ const CourseForm = () => {
         createdBy: courseData.createdBy,
         duration: courseData.duration,
         price: courseData.price,
-        image: null
+        image: null,
+        material: null
       });
       if (courseData.image) {
         setPreviewImage(`${server}/uploads/${courseData.image}`);
@@ -106,6 +109,22 @@ const CourseForm = () => {
         image: file
       }));
       setPreviewImage(URL.createObjectURL(file));
+    }
+  };
+
+  const handleMaterialChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (file.type !== 'application/pdf') {
+        toast.error('Please upload a PDF file');
+        e.target.value = null;
+        return;
+      }
+      setCourse(prev => ({
+        ...prev,
+        material: file
+      }));
+      setMaterialName(file.name);
     }
   };
 
@@ -245,6 +264,23 @@ const CourseForm = () => {
                   min="0"
                   placeholder="Enter course price"
                 />
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="material">Course Material (PDF)</label>
+                <input
+                  type="file"
+                  id="material"
+                  name="material"
+                  onChange={handleMaterialChange}
+                  accept=".pdf"
+                  className="material-input"
+                />
+                {materialName && (
+                  <div className="material-name">
+                    Selected: {materialName}
+                  </div>
+                )}
               </div>
             </div>
 
