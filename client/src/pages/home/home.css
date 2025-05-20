@@ -142,3 +142,196 @@
     font-size: 2rem;
   }
 }
+
+/* Telegram Float Wrapper */
+.telegram-float-wrapper {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  z-index: 1100;
+  display: flex;
+  flex-direction: column-reverse; /* Changed to column-reverse to show popup above */
+  align-items: flex-end;
+}
+
+.telegram-float {
+  position: relative;
+  width: 60px;
+  height: 60px;
+  background-color: #0088cc;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+  transition: transform 0.2s;
+}
+
+.telegram-float:hover {
+  transform: scale(1.05);
+}
+
+.telegram-icon {
+  font-size: 30px;
+  color: white;
+}
+
+.telegram-tooltip {
+  position: absolute;
+  right: 70px;
+  top: 50%;
+  transform: translateY(-50%);
+  background-color: #333;
+  color: white;
+  padding: 8px 12px;
+  border-radius: 4px;
+  font-size: 14px;
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease;
+}
+
+.telegram-tooltip.show-help {
+  opacity: 1;
+  visibility: visible;
+}
+
+.telegram-chat-popup {
+  position: absolute;
+  bottom: 80px; /* Position above the icon */
+  right: 0;
+  width: 300px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  margin-bottom: 15px;
+  overflow: hidden;
+  animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.chat-header {
+  background-color: #0088cc;
+  color: white;
+  padding: 12px 15px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: 500;
+}
+
+.chat-close-btn {
+  background: none;
+  border: none;
+  color: white;
+  cursor: pointer;
+  font-size: 20px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.chat-body {
+  padding: 15px;
+}
+
+.chat-fixed-text {
+  background-color: #f0f2f5;
+  padding: 15px;
+  border-radius: 8px;
+  margin-bottom: 15px;
+  font-size: 14px;
+  color: #333;
+  border-left: 3px solid #0088cc;
+}
+
+.help-center-title {
+  display: block;
+  font-size: 16px;
+  font-weight: 600;
+  color: #0088cc;
+  margin-bottom: 5px;
+}
+
+.help-center-subtitle {
+  margin: 0;
+  color: #666;
+  font-size: 13px;
+}
+
+.chat-input {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  resize: none;
+  margin-bottom: 10px;
+  font-size: 14px;
+  min-height: 60px;
+}
+
+.chat-input:focus {
+  outline: none;
+  border-color: #0088cc;
+}
+
+.chat-send-btn {
+  background-color: #0088cc;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  float: right;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.chat-send-btn:hover {
+  background-color: #0077b3;
+  transform: scale(1.05);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
+}
+
+.chat-send-btn:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.chat-send-arrow {
+  font-size: 20px;
+  transform: rotate(-45deg);
+  margin-left: -2px;
+  margin-top: 2px;
+  line-height: 1;
+}
+
+@media (max-width: 768px) {
+  .telegram-float-wrapper {
+    bottom: 20px;
+    right: 20px;
+  }
+  
+  .telegram-chat-popup {
+    width: 280px;
+  }
+}

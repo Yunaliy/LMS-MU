@@ -1,12 +1,56 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaGraduationCap, FaBook, FaUsers, FaCertificate } from 'react-icons/fa';
+import { FaTelegram } from 'react-icons/fa';
+import { IoMdClose } from 'react-icons/io';
+import { UserData } from "../../context/UserContext";
 import "./home.css";
 import Testimonials from "../../components/testimonials/Testimonials";
 
+const TELEGRAM_USERNAME = 'aliyrida';
+
 const Home = () => {
   const navigate = useNavigate();
+  const { isAuth, user } = UserData();
+  const [showHelpText, setShowHelpText] = useState(false);
+  const [showChat, setShowChat] = useState(false);
+  const [message, setMessage] = useState("");
   
+  useEffect(() => {
+    if (isAuth) {
+      setShowHelpText(true);
+      const timer = setTimeout(() => {
+        setShowHelpText(false);
+      }, 8000);
+      return () => clearTimeout(timer);
+    }
+  }, [isAuth]);
+
+  // Show chat popup on hover (desktop)
+  const handleTelegramHover = () => {
+    setShowChat(true);
+    setShowHelpText(false); // Hide tooltip when form is open
+  };
+
+  const handleSend = () => {
+    if (!message.trim()) return; // Don't send empty messages
+    
+    const userName = user?.name || 'a user';
+    const userEmail = user?.email || 'No email provided';
+    const formattedMessage = `🏛️ Medinatul uloom help center\n━━━━━━━━━━━━━━━━━━━━━━━\n\n👤 User Details:\n• Name: ${userName}\n• Email: ${userEmail}\n\n💬 Message:\n${message}`;
+    const telegramUrl = `https://t.me/${TELEGRAM_USERNAME}?text=${encodeURIComponent(formattedMessage)}`;
+    window.open(telegramUrl, '_blank');
+    setShowChat(false);
+    setMessage("");
+  };
+
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSend();
+    }
+  };
+
   const features = [
     {
       icon: <FaGraduationCap />,
@@ -75,6 +119,54 @@ const Home = () => {
             </div>
           </div>
         </section>
+
+        {/* Telegram Floating Button & Chat Popup */}
+        {isAuth && (
+          <div className="telegram-float-wrapper">
+            <div
+              className="telegram-float"
+              onMouseEnter={handleTelegramHover}
+            >
+              <FaTelegram className="telegram-icon" />
+              {/* Hide tooltip if chat is open */}
+              {!showChat && (
+                <span className={`telegram-tooltip ${showHelpText ? 'show-help' : ''}`}>
+                  {showHelpText ? 'For Any Help' : 'Contact Admin'}
+                </span>
+              )}
+            </div>
+            {showChat && (
+              <div className="telegram-chat-popup">
+                <div className="chat-header">
+                  <span>Chat with us on Telegram!</span>
+                  <button className="chat-close-btn" onClick={() => setShowChat(false)}><IoMdClose /></button>
+                </div>
+                <div className="chat-body">
+                  <div className="chat-fixed-text">
+                    <span className="help-center-title">🏛️ Medinatul uloom help center</span>
+                    <p className="help-center-subtitle">How can we assist you today?</p>
+                  </div>
+                  <textarea
+                    className="chat-input"
+                    value={message}
+                    onChange={e => setMessage(e.target.value)}
+                    onKeyPress={handleKeyPress}
+                    rows={2}
+                    placeholder="Type your message here..."
+                    autoFocus
+                  />
+                  <button 
+                    className="chat-send-btn" 
+                    onClick={handleSend}
+                    disabled={!message.trim()}
+                  >
+                    <span className="chat-send-arrow">➤</span>
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
       </div>
       <Testimonials />
     </div>

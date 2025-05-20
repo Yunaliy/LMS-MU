@@ -220,7 +220,7 @@ export default function PaymentReports() {
 
             <div class="no-print" style="margin-top: 20px; text-align: center;">
               <button onclick="window.print()">Print Report</button>
-            </div>
+        </div>
           </body>
         </html>
       `;
@@ -267,8 +267,8 @@ export default function PaymentReports() {
               <Printer size={20} />
               Print
             </button>
-            <button 
-              onClick={handleExport} 
+            <button
+              onClick={handleExport}
               className="export-btn"
               disabled={loading || !paymentData.payments.length}
             >
@@ -291,27 +291,27 @@ export default function PaymentReports() {
                 <div className="card-content">
                   <div className="stat-icon">
                     <Wallet />
-                  </div>
+              </div>
                   <div className="stat-text">
                     <p className="stat-label">Total Revenue</p>
                     <p className="stat-value">ETB {paymentData.totalRevenue.toLocaleString()}</p>
                     <p className="stat-change">{percentageChange.revenue} from last month</p>
-                  </div>
-                </div>
               </div>
+            </div>
+          </div>
 
               {/* Course Enrollments Card */}
               <div className="stat-card success">
                 <div className="card-content">
                   <div className="stat-icon">
                     <Users />
-                  </div>
+              </div>
                   <div className="stat-text">
                     <p className="stat-label">Total Transactions</p>
                     <p className="stat-value">{paymentData.totalPayments}</p>
                     <p className="stat-change">{percentageChange.enrollments} from last month</p>
-                  </div>
-                </div>
+              </div>
+            </div>
               </div>
 
               {/* Average Revenue Per Course Card */}
@@ -324,8 +324,8 @@ export default function PaymentReports() {
                     <p className="stat-label">Average Payment</p>
                     <p className="stat-value">ETB {paymentData.averagePayment.toLocaleString()}</p>
                     <p className="stat-change">{percentageChange.averageRevenue} from last month</p>
-                  </div>
-                </div>
+            </div>
+          </div>
               </div>
             </div>
 
@@ -357,13 +357,13 @@ export default function PaymentReports() {
                   <div className="table-controls">
                     <div className="search-box">
                       <Search size={20} />
-                      <input
-                        type="text"
+                  <input
+                    type="text"
                         placeholder="Search courses..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                      />
-                    </div>
+                  />
+                </div>
                     <div className="sort-controls">
                       <ArrowUpDown size={20} />
                       <select 
@@ -376,8 +376,8 @@ export default function PaymentReports() {
                         <option value="mostEnrollments">Most Enrollments</option>
                         <option value="newest">Newest</option>
                       </select>
-                    </div>
-                  </div>
+              </div>
+            </div>
 
                   <table className="data-table">
                     <thead>
@@ -387,8 +387,8 @@ export default function PaymentReports() {
                         <th>Ustaz</th>
                         <th>Enrollments</th>
                         <th>Revenue</th>
-                      </tr>
-                    </thead>
+                </tr>
+              </thead>
                     <tbody>
                       {currentPayments.length > 0 ? (
                         currentPayments.map((payment, index) => (
@@ -403,10 +403,10 @@ export default function PaymentReports() {
                       ) : (
                         <tr>
                           <td colSpan="5" className="no-data">No payment data available</td>
-                        </tr>
+                  </tr>
                       )}
-                    </tbody>
-                  </table>
+              </tbody>
+            </table>
                   
                   {/* Pagination Controls */}
                   <div className="pagination-controls">
@@ -445,8 +445,8 @@ export default function PaymentReports() {
                   <div className="overview-card">
                     <h3>Average Payment</h3>
                     <p className="overview-value">ETB {paymentData.averagePayment.toLocaleString()}</p>
-                  </div>
-                </div>
+          </div>
+        </div>
                 <RevenueOverviewChart />
               </div>
             )}
