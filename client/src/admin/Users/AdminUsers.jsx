@@ -18,6 +18,7 @@ const AdminUsers = ({ user }) => {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showRoleDialog, setShowRoleDialog] = useState(false);
   const [selectedUserForAction, setSelectedUserForAction] = useState(null);
+  const [deletingCourseId, setDeletingCourseId] = useState(null);
 
   async function fetchUsers() {
     setLoading(true);
@@ -261,22 +262,26 @@ const AdminUsers = ({ user }) => {
   };
 
   const confirmDelete = async () => {
+    if (!selectedUserForAction) return;
+    
+    setDeletingCourseId(selectedUserForAction._id);
+    setShowDeleteDialog(false);
+
     try {
-      const response = await axios.delete(`${server}/api/user/${selectedUserForAction._id}`, {
+      const { data } = await axios.delete(`${server}/api/users/${selectedUserForAction._id}`, {
         headers: {
           token: localStorage.getItem("token"),
         },
       });
-      if (response.status === 200) {
-        toast.success('User deleted successfully');
-        fetchUsers();
-      }
+
+      toast.success(data.message);
+      fetchUsers(); // Refresh users list after deletion
     } catch (error) {
-      toast.error('Error deleting user');
-      console.error('Error:', error);
+      toast.error(error.response?.data?.message || 'Error deleting user');
+    } finally {
+      setDeletingCourseId(null);
+      setSelectedUserForAction(null);
     }
-    setShowDeleteDialog(false);
-    setSelectedUserForAction(null);
   };
 
   const handleRoleUpdate = (user) => {

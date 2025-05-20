@@ -34,7 +34,6 @@ import AdminProfile from './admin/Profile/AdminProfile';
 import AdminLectureManager from './admin/Lectures/AdminLectureManager';
 import CourseDetailedDescription from "./pages/coursedescription/CourseDetailedDescription";
 import PaymentReports from "./admin/Payment/PaymentReports";
-import GoogleCallback from './pages/auth/GoogleCallback';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import TermsOfService from './pages/TermsOfService';
 
@@ -244,7 +243,6 @@ const AppContent = () => {
           }
         />
         <Route path="/course/:courseId/certificate" element={<Certificate />} />
-        <Route path="/auth/google/callback" element={<GoogleCallback />} />
         <Route path="/privacy-policy" element={<PrivacyPolicy />} />
         <Route path="/terms" element={<TermsOfService />} />
       </Routes>

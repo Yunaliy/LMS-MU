@@ -10,8 +10,7 @@ import {
   getUserDetails,
   updateUserRole,
   getAllUsers,
-  googleAuth,
-  getGoogleClientId,
+  deleteUser,
 } from '../controllers/user.js';
 import { isAuth, isAdmin } from '../middlewares/isAuth.js';
 import { upload } from '../middlewares/multer.js';
@@ -32,18 +31,15 @@ router.put(
 );
 router.post('/forgot', forgotPassword);
 router.post('/reset/:token', resetPassword);
-router.post('/auth/google', googleAuth);
 
 // Admin routes
 router.get('/users', isAuth, isAdmin, getAllUsers);
 router.get('/user/:userId/details', isAuth, isAdmin, getUserDetails);
 router.put('/user/:userId/role', isAuth, isAdmin, updateUserRole);
+router.delete('/users/:userId', isAuth, isAdmin, deleteUser);
 
 // Progress routes
 // router.post('/user/progress', isAuth, addProgress);
 // router.get('/user/progress', isAuth, getYourProgress);
-
-// Add this new route
-router.get('/auth/google-client-id', getGoogleClientId);
 
 export default router;

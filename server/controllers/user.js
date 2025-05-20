@@ -8,12 +8,9 @@ import { fileURLToPath } from 'url';
 import fs from 'fs';
 import Course from '../models/Course.js';
 import { Progress } from '../models/Progress.js';
-import { OAuth2Client } from 'google-auth-library';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-
-const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 export const register = TryCatch(async (req, res) => {
   const { email, name, password } = req.body;
@@ -395,91 +392,33 @@ export const getAllUsers = TryCatch(async (req, res) => {
   });
 });
 
-export const googleAuth = TryCatch(async (req, res) => {
-  const { code } = req.body; // Removed client_id and redirect_uri from request body
+export const deleteUser = TryCatch(async (req, res) => {
+  const { userId } = req.params;
 
-  // Validate authorization code
-  if (!code) {
-    console.error('No authorization code provided');
-    return res.status(400).json({
+  const user = await User.findById(userId);
+  if (!user) {
+    return res.status(404).json({
       success: false,
-      message: 'Authorization code is required'
+      message: "User not found"
     });
   }
 
-  try {
-    // Exchange authorization code for tokens
-    console.log('Exchanging code for tokens...');
-    const { tokens } = await client.getToken({
-      code,
-      client_id: process.env.GOOGLE_CLIENT_ID,
-      client_secret: process.env.GOOGLE_CLIENT_SECRET,
-      redirect_uri: process.env.GOOGLE_REDIRECT_URI
-    });
-
-    // Verify we got an ID token
-    if (!tokens.id_token) {
-      throw new Error('No ID token received from Google');
+  // Delete user's profile image if exists
+  if (user.image) {
+    const imagePath = path.join(__dirname, '../uploads', user.image);
+    if (fs.existsSync(imagePath)) {
+      fs.unlinkSync(imagePath);
     }
-
-    // Verify the ID token (more secure than using access token)
-    const ticket = await client.verifyIdToken({
-      idToken: tokens.id_token,
-      audience: process.env.GOOGLE_CLIENT_ID
-    });
-
-    const { name, email, picture } = ticket.getPayload();
-
-    // Find or create user
-    let user = await User.findOne({ email });
-    
-    if (!user) {
-      user = await User.create({
-        name,
-        email,
-        image: picture,
-        password: Math.random().toString(36).slice(-8), // Random password
-        verified: true
-      });
-      console.log('New user created:', email);
-    }
-
-    // Generate JWT token
-    const authToken = jwt.sign(
-      { _id: user._id },
-      process.env.JWT_SECRET,
-      { expiresIn: '15d' }
-    );
-
-    // Return response
-    res.status(200).json({
-      success: true,
-      token: authToken,
-      user: {
-        _id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        image: user.image,
-        subscription: user.subscription || [],
-      }
-    });
-
-  } catch (error) {
-    console.error('Google authentication error:', error);
-    
-    const statusCode = error.message.includes('invalid_grant') ? 401 : 500;
-    
-    res.status(statusCode).json({
-      success: false,
-      message: `Google authentication failed: ${error.message.replace('invalid_grant: ', '')}`
-    });
   }
-});
 
-export const getGoogleClientId = TryCatch(async (req, res) => {
+  // Delete user's progress records
+  await Progress.deleteMany({ user: userId });
+
+  // Delete the user
+  await user.deleteOne();
+
   res.status(200).json({
     success: true,
-    clientId: process.env.GOOGLE_CLIENT_ID
+    message: "User deleted successfully"
   });
 });
