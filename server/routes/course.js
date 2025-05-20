@@ -16,12 +16,13 @@ import {
 } from "../controllers/course.js";
 import { isAuth, isAdmin } from "../middlewares/isAuth.js";
 import { upload } from "../middlewares/multer.js";
+import Course from "../models/Course.js";
+import { Rating } from "../models/Rating.js";
 
 const router = express.Router();
 
-// Public routes - no auth required
-router.get("/courses/published", getPublishedCourses);
-router.get("/course/all", isAuth, getAllCourses);
+// Public routes
+router.get("/course/all", getAllCourses);
 router.get("/course/:id", getSingleCourse);
 
 // User routes - require authentication

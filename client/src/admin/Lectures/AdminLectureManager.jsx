@@ -93,13 +93,25 @@ const AdminLectureManager = () => {
   };
 
   const handleInputChange = (e) => {
-    const { name, value, type, checked, files } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : 
-              type === 'file' ? files[0] : 
-              value
-    }));
+    const { name, value, type, files } = e.target;
+    
+    if (type === 'file' && files && files[0]) {
+      const file = files[0];
+      // Check file size (1GB = 1024 * 1024 * 1024 bytes)
+      if (file.size > 1024 * 1024 * 1024) {
+        toast.error('File size should be less than 1GB');
+        return;
+      }
+      setFormData(prev => ({
+        ...prev,
+        [name]: file
+      }));
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [name]: value
+      }));
+    }
   };
 
   const validateYouTubeUrl = (input) => {
