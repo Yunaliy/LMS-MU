@@ -1,6 +1,6 @@
-import React from "react";
-import AdminHeader from "./AdminHeader";
-import AdminSidebar from "./AdminSidebar";
+import React from 'react';
+import AdminSidebar from './AdminSidebar';
+import AdminHeader from './AdminHeader';
 
 const Layout = ({ children }) => {
   return (
