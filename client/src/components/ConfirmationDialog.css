@@ -1,0 +1,79 @@
+.confirmation-dialog-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.confirmation-dialog {
+  background: white;
+  border-radius: 8px;
+  padding: 24px;
+  width: 90%;
+  max-width: 400px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  animation: slideIn 0.2s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateY(-20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.confirmation-dialog-content h3 {
+  margin: 0 0 16px 0;
+  color: #333;
+  font-size: 1.25rem;
+}
+
+.confirmation-dialog-content p {
+  margin: 0 0 24px 0;
+  color: #666;
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.confirmation-dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.confirmation-dialog-actions button {
+  padding: 8px 16px;
+  border-radius: 4px;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+}
+
+.confirmation-dialog-actions .btn-secondary {
+  background-color: #6c757d;
+  color: white;
+}
+
+.confirmation-dialog-actions .btn-secondary:hover {
+  background-color: #5a6268;
+}
+
+.confirmation-dialog-actions .btn-danger {
+  background-color: #dc3545;
+  color: white;
+}
+
+.confirmation-dialog-actions .btn-danger:hover {
+  background-color: #c82333;
+} 

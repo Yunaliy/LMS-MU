@@ -1,0 +1,351 @@
+.users {
+  width: 350px;
+  overflow-x: auto;
+  white-space: nowrap;
+  margin: 20px auto;
+  min-height: 80vh;
+  border: solid gray 1px;
+}
+
+/* Custom styles for the users table */
+.card {
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+
+.card-header {
+  background-color: white !important ;
+  color: var(--primary-dark) !important;;
+  padding: 1rem;
+}
+
+.table-responsive {
+  overflow-x: auto;
+  width: 100%;
+}
+
+.table {
+  margin-bottom: 0;
+  width: 100%;
+}
+
+.table th {
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.85rem;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+
+.table td {
+  font-size: 0.9rem;
+  vertical-align: middle;
+  padding: 1rem;
+}
+
+.table-hover tbody tr:hover {
+  background-color: rgba(0, 0, 0, 0.03);
+}
+
+.btn-sm {
+  padding: 0.35rem 0.75rem;
+  font-size: 0.875rem;
+}
+
+/* Button Styles */
+.btn {
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.btn-primary {
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+}
+
+.btn-primary:hover {
+  background-color: var(--primary-dark);
+}
+
+.btn-download {
+  background-color: var(--secondary-color);
+  color: white;
+  border: none;
+}
+
+.btn-download:hover {
+  background-color: var(--secondary-dark);
+}
+
+.btn-delete {
+  background-color: #dc3545;
+  color: white;
+  border: none;
+}
+
+.btn-delete:hover {
+  background-color: #bb2d3b;
+}
+
+.btn-upgrade {
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+}
+
+.btn-upgrade:hover {
+  background-color: var(--primary-dark);
+}
+
+.btn-downgrade {
+  background-color: #6c757d;
+  color: white;
+  border: none;
+}
+
+.btn-downgrade:hover {
+  background-color: #5a6268;
+}
+
+/* Modal Styles */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background-color: white;
+  padding: 0;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 600px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.modal-header {
+  background-color: var(--secondary-color) !important;
+  color: white !important;
+  padding: 1rem;
+  border-bottom: 1px solid #dee2e6;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-radius: 8px 8px 0 0;
+}
+
+.modal-header h3 {
+  margin: 0;
+  color: white !important;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: white !important;
+  opacity: 0.8;
+  transition: opacity 0.2s;
+}
+
+.close-btn:hover {
+  opacity: 1;
+}
+
+.modal-body {
+  padding: 1.5rem;
+}
+
+.modal-footer {
+  padding: 1rem;
+  border-top: 1px solid #dee2e6;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.user-info {
+  margin-bottom: 1.5rem;
+}
+
+.user-info h4 {
+  color: #333;
+  margin-bottom: 1rem;
+}
+
+.enrolled-courses {
+  margin-top: 1.5rem;
+}
+
+.course-item {
+  padding: 1rem;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+  background-color: #f8f9fa;
+}
+
+.course-item p {
+  margin: 0.5rem 0;
+}
+
+/* Responsive Styles */
+@media (max-width: 768px) {
+  .modal-content {
+    width: 95%;
+    margin: 10px;
+  }
+  
+  .table td, .table th {
+    padding: 0.75rem;
+  }
+
+  .btn {
+    padding: 0.4rem 0.8rem;
+  }
+
+  .modal-footer {
+    flex-direction: column;
+  }
+
+  .modal-footer .btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* Confirmation Dialog Styles */
+.confirmation-dialog {
+  max-width: 400px !important;
+}
+
+.confirmation-message {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+}
+
+.warning-icon {
+  font-size: 2rem;
+  color: #f0ad4e;
+}
+
+.confirmation-message p {
+  margin: 0;
+  font-size: 1rem;
+  color: #333;
+}
+
+.btn-secondary {
+  background-color: #6c757d;
+  color: white;
+  border: none;
+}
+
+.btn-secondary:hover {
+  background-color: #5c636a;
+}
+
+/* Dialog Styles */
+.dialog-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.dialog-content {
+  background-color: white;
+  border-radius: 8px;
+  padding: 24px;
+  width: 90%;
+  max-width: 400px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.dialog-content h3 {
+  margin: 0 0 16px 0;
+  color: #333;
+  font-size: 1.5rem;
+}
+
+.dialog-content p {
+  margin: 0 0 24px 0;
+  color: #666;
+  line-height: 1.5;
+}
+
+.dialog-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.dialog-buttons button {
+  padding: 8px 16px;
+  border-radius: 4px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.dialog-buttons .btn-secondary {
+  background-color: #6c757d;
+  color: white;
+}
+
+.dialog-buttons .btn-secondary:hover {
+  background-color: #5c636a;
+}
+
+.dialog-buttons .btn-delete {
+  background-color: #dc3545;
+  color: white;
+}
+
+.dialog-buttons .btn-delete:hover {
+  background-color: #bb2d3b;
+}
+
+.dialog-buttons .btn-upgrade {
+  background-color: var(--primary-color);
+  color: white;
+}
+
+.dialog-buttons .btn-upgrade:hover {
+  background-color: var(--primary-dark);
+}
+
+.dialog-buttons .btn-downgrade {
+  background-color: #ffc107;
+  color: #000;
+  border: none;
+}
+
+.dialog-buttons .btn-downgrade:hover {
+  background-color: #e0a800;
+}
