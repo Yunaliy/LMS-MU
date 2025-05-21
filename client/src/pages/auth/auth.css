@@ -148,6 +148,38 @@
   box-shadow: 0 0 0 2px rgba(var(--primary-color-rgb), 0.1);
 }
 
+.otp-inputs-container {
+  display: flex;
+  gap: 8px; /* Adjust gap as needed */
+  justify-content: center; /* Center the inputs */
+}
+
+.otp-input {
+  width: 40px !important; /* Fixed width for each input */
+  text-align: center; /* Center the digit */
+  padding: 10px 0 !important; /* Adjust padding */
+  font-size: 1.2rem; /* Adjust font size */
+}
+
+.password-input-container {
+  position: relative;
+  width: 100%; /* Ensure it takes full width */
+}
+
+.password-input-container input[type="password"],
+.password-input-container input[type="text"] {
+  padding-right: 2.5rem; /* Make space for the icon */
+}
+
+.password-toggle-icon {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+  color: var(--text-secondary);
+}
+
 /* Alert Styles */
 .alert {
   border-radius: 8px;

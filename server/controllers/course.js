@@ -846,4 +846,69 @@ export const togglePublish = TryCatch(async (req, res) => {
   }
 });
 
+export const getTopRatedCourses = TryCatch(async (req, res) => {
+  try {
+    // Get courses with ratings, sorted by average rating
+    const courses = await Courses.find({ 
+      published: true,
+      averageRating: { $gt: 0 } // Only get courses with ratings
+    })
+      .sort({ averageRating: -1 })
+      .limit(8) // Limit to top 8 courses
+      .lean()
+      .select('-__v');
+
+    if (!courses || courses.length === 0) {
+      return res.status(200).json({
+        success: true,
+        courses: [],
+        message: "No rated courses found"
+      });
+    }
+
+    // Get basic course details without sensitive information
+    const coursesWithDetails = await Promise.all(
+      courses.map(async (course) => {
+        const [lectures, assessment] = await Promise.all([
+          Lecture.find({ course: course._id })
+            .select('title isPreview')
+            .lean(),
+          Assessment.findOne({ courseId: course._id })
+            .select('title')
+            .lean(),
+        ]);
+
+        return {
+          ...course,
+          lectures: lectures.map(lecture => ({
+            title: lecture.title,
+            isPreview: lecture.isPreview
+          })),
+          hasAssessment: Boolean(assessment),
+          averageRating: course.averageRating || 0,
+          numberOfRatings: course.numberOfRatings || 0,
+          image: {
+            url: course.image ? `${process.env.FRONTEND_URL}/uploads/${course.image}` : '/assets/default-course.jpg'
+          }
+        };
+      })
+    );
+
+    res.status(200).json({
+      success: true,
+      courses: coursesWithDetails,
+      meta: {
+        count: coursesWithDetails.length
+      }
+    });
+  } catch (error) {
+    console.error("Error in getTopRatedCourses:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error fetching top rated courses",
+      error: error.message
+    });
+  }
+});
+
 

@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { server } from "../../config";
+import CourseCard from "../../components/coursecard/CourseCard";
 import "./highRatedCourses.css";
 
 const HighRatedCourses = () => {
@@ -13,24 +15,12 @@ const HighRatedCourses = () => {
     const fetchTopRatedCourses = async () => {
       try {
         setLoading(true);
+        const { data } = await axios.get(`${server}/api/course/top-rated`);
+        setCourses(data.courses || []);
         setError(null);
-        const { data } = await axios.get("http://localhost:5000/api/course/top-rated", {
-          headers: {
-            'Content-Type': 'application/json'
-          }
-        });
-        
-        if (data.success) {
-          setCourses(data.courses);
-        } else {
-          setError(data.message || "Unable to load courses at this time");
-        }
-      } catch (error) {
-        console.error("Error fetching top rated courses:", error);
-        setError(
-          error.response?.data?.message || 
-          "Unable to load courses. Please try again later."
-        );
+      } catch (err) {
+        setError("Failed to fetch top-rated courses");
+        console.error("Error fetching top-rated courses:", err);
       } finally {
         setLoading(false);
       }
@@ -41,8 +31,8 @@ const HighRatedCourses = () => {
 
   if (loading) {
     return (
-      <section className="high-rated-section">
-        <h2 className="high-rated-title">Featured Courses</h2>
+      <section className="featured-courses-section">
+        <h2 className="section-title">Featured Courses</h2>
         <div className="loading-courses">
           <div className="loading-spinner"></div>
           <p>Loading courses...</p>
@@ -53,8 +43,8 @@ const HighRatedCourses = () => {
 
   if (error) {
     return (
-      <section className="high-rated-section">
-        <h2 className="high-rated-title">Featured Courses</h2>
+      <section className="featured-courses-section">
+        <h2 className="section-title">Featured Courses</h2>
         <div className="error-message">
           <p>{error}</p>
           <button 
@@ -70,8 +60,8 @@ const HighRatedCourses = () => {
 
   if (!courses.length) {
     return (
-      <section className="high-rated-section">
-        <h2 className="high-rated-title">Featured Courses</h2>
+      <section className="featured-courses-section">
+        <h2 className="section-title">Featured Courses</h2>
         <div className="no-courses">
           <p>Discover our featured courses</p>
           <button 
@@ -86,44 +76,16 @@ const HighRatedCourses = () => {
   }
 
   return (
-    <section className="high-rated-section">
-      <h2 className="high-rated-title">High Rated Courses</h2>
-      <div className="high-rated-courses-row">
+    <section className="featured-courses-section">
+      <h2 className="section-title">Featured Courses</h2>
+      <div className="courses-grid">
         {courses.map((course) => (
-          <div 
-            className="course-card" 
+          <CourseCard
             key={course._id}
-            onClick={() => navigate(`/course/${course._id}`)}
-          >
-            <div className="course-image">
-              <img 
-                src={course.image?.url || "/assets/default-course.jpg"} 
-                alt={course.title} 
-                onError={(e) => {
-                  e.target.onerror = null;
-                  e.target.src = "/assets/default-course.jpg";
-                }}
-              />
-              {course.isBestseller && <span className="bestseller-badge">Bestseller</span>}
-            </div>
-            <div className="course-info">
-              <h3 className="course-title">{course.title}</h3>
-              <div className="course-instructor">{course.createdBy}</div>
-              <div className="course-rating">
-                <span className="rating-value">
-                  {course.averageRating ? course.averageRating.toFixed(1) : "New"}
-                </span>
-                {course.averageRating > 0 && <span className="star">★</span>}
-                {course.ratingCount > 0 && (
-                  <span className="reviews">({course.ratingCount})</span>
-                )}
-              </div>
-              <div className="course-price">
-                <span className="current-price">ETB {course.price}</span>
-                {course.oldPrice && <span className="old-price">ETB {course.oldPrice}</span>}
-              </div>
-            </div>
-          </div>
+            course={course}
+            showRating={true}
+            onClick={() => navigate(`/course/${course._id}/details`)}
+          />
         ))}
       </div>
     </section>

@@ -10,7 +10,7 @@ import CourseCardSkeleton from "./CourseCardSkeleton";
 import StarRating from '../StarRating/StarRating.jsx';
 import RatingDialog from '../RatingDialog/RatingDialog.jsx';
 
-const CourseCard = ({ course: propCourse }) => {
+const CourseCard = ({ course: propCourse, showRating = false }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, isAuth } = UserData();
@@ -262,9 +262,9 @@ const CourseCard = ({ course: propCourse }) => {
           </div>
         )}
 
-        {(isCoursesPage || (isDashboard && isEnrolled)) && (
+        {(showRating || isCoursesPage || (isDashboard && isEnrolled)) && (
              <div className="rating-section" onClick={handleStarClick}> 
-                 {isCoursesPage && (
+                 {(showRating || isCoursesPage) && (
                       <span className="average-rating-display">
                           <StarRating rating={averageCourseRating} size={16} color="var(--primary-color)" interactive={false} average={true} />
                            {numberOfCourseRatings > 0 && (

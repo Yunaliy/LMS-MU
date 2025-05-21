@@ -3,17 +3,21 @@ import "./auth.css";
 import { Link, useNavigate } from "react-router-dom";
 import { UserData } from "../../context/UserContext";
 import { FcGoogle } from "react-icons/fc";
+import { FaEye, FaEyeSlash } from 'react-icons/fa';
 
 const Register = () => {
   const navigate = useNavigate();
   const { btnLoading, registerUser, loginWithGoogle } = UserData();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [name, setName] = useState("");
   // const [image, setImage] = useState(null);
 
   // const [imagePreview, setImagePreview] = useState("");
   const [error, setError] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   // const handleImageChange = (e) => {
   //   const file = e.target.files[0];
@@ -40,8 +44,37 @@ const Register = () => {
   //   }
   // };
 
+  const validatePassword = (pw) => {
+    if (pw.length < 6) {
+      return "Password must be at least 6 characters long.";
+    }
+    if (!/[a-zA-Z]/.test(pw)) {
+        return "Password must contain at least one letter.";
+    }
+    if (!/\d/.test(pw)) {
+        return "Password must contain at least one number.";
+    }
+    if (/(.)\1\1/.test(pw)) {
+        return "Password cannot contain sequences of 3 or more identical characters.";
+    }
+    return "";
+  };
+
   const submitHandler = async (e) => {
     e.preventDefault();
+    setError("");
+
+    const passwordError = validatePassword(password);
+    if (passwordError) {
+        setError(passwordError);
+        return;
+    }
+
+    if (password !== confirmPassword) {
+      setError("Password and Confirm Password do not match.");
+      return;
+    }
+
     await registerUser(name, email, password, navigate);
   };
 
@@ -90,15 +123,44 @@ const Register = () => {
 
                 <div className="mb-3">
                   <label htmlFor="password" className="form-label">Password</label>
-                  <input
-                    type="password"
-                    className="form-control"
-                    id="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Enter your password"
-                    required
-                  />
+                  <div className="password-input-container">
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      className="form-control"
+                      id="password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="Enter your password"
+                      required
+                    />
+                    <span 
+                        className="password-toggle-icon"
+                        onClick={() => setShowPassword(!showPassword)}
+                    >
+                        {showPassword ? <FaEyeSlash /> : <FaEye />}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="mb-3">
+                  <label htmlFor="confirmPassword" className="form-label">Confirm Password</label>
+                   <div className="password-input-container">
+                    <input
+                      type={showConfirmPassword ? "text" : "password"}
+                      className="form-control"
+                      id="confirmPassword"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      placeholder="Confirm your password"
+                      required
+                    />
+                     <span 
+                        className="password-toggle-icon"
+                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    >
+                        {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
+                    </span>
+                  </div>
                 </div>
 
                 {/* <div className="mb-3">

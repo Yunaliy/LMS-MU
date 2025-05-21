@@ -293,3 +293,34 @@
 .course-card .dashboard-card {
   /* ... existing code ... */
 }
+
+.course-card .rating-section {
+  margin-top: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.course-card .average-rating-display {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.course-card .rating-count {
+  font-size: 12px;
+  color: #6a6f73;
+  font-weight: 500;
+}
+
+.course-card .user-rating-display {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.course-card .rating-text {
+  font-size: 12px;
+  color: #6a6f73;
+  font-weight: 500;
+}

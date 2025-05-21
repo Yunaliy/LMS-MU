@@ -35,6 +35,7 @@
   color: white;
   font-weight: bold;
   margin-bottom: var(--spacing-sm);
+  text-align: center;
 }
 
 .courses-header .section-subtitle {
@@ -49,12 +50,15 @@
   max-width: 800px;
   margin: var(--spacing-lg) auto 0;
   padding: 0 var(--spacing-sm);
+  flex-wrap: wrap;
+  justify-content: center;
 }
 
 .search-box,
 .filter-box {
   position: relative;
   flex: 1;
+  min-width: 250px;
 }
 
 .search-icon,

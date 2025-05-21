@@ -33,6 +33,7 @@ const AdminCourses = () => {
       const { data } = await axios.get(`${server}/api/course/all`, {
         headers: {
           token: localStorage.getItem("token"),
+          'Content-Type': 'application/json'
         },
       });
 

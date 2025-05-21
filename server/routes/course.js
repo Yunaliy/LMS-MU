@@ -12,7 +12,8 @@ import {
   addOrUpdateRating,
   getMyCourseRating,
   deleteMyCourseRating,
-  togglePublish
+  togglePublish,
+  getTopRatedCourses
 } from "../controllers/course.js";
 import { isAuth, isAdmin } from "../middlewares/isAuth.js";
 import { upload } from "../middlewares/multer.js";
@@ -21,8 +22,14 @@ import { Rating } from "../models/Rating.js";
 
 const router = express.Router();
 
-// Public routes
-router.get("/course/all", getAllCourses);
+// Public routes - specific routes first
+router.get("/courses/published", getPublishedCourses);
+router.get("/course/top-rated", getTopRatedCourses);
+
+// Admin route for fetching all courses - requires auth and admin middleware
+router.get("/course/all", isAuth, isAdmin, getAllCourses);
+
+// Parameterized routes after specific routes
 router.get("/course/:id", getSingleCourse);
 
 // User routes - require authentication
