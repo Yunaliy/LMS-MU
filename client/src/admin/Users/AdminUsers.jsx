@@ -280,7 +280,7 @@ const AdminUsers = ({ user }) => {
       toast.error(error.response?.data?.message || 'Error deleting user');
     } finally {
       setDeletingCourseId(null);
-      setSelectedUserForAction(null);
+    setSelectedUserForAction(null);
     }
   };
 
