@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 import { server } from "../../config";
 import toast from "react-hot-toast";
+import { FaEye, FaEyeSlash } from 'react-icons/fa';
 import "./resetpassword.css";
 
 const ResetPassword = () => {
@@ -11,22 +12,38 @@ const ResetPassword = () => {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  const validatePassword = (pw) => {
+    if (pw.length < 6) {
+      return "Password must be at least 6 characters long.";
+    }
+    if (!/[a-zA-Z]/.test(pw)) {
+      return "Password must contain at least one letter.";
+    }
+    if (!/\d/.test(pw)) {
+      return "Password must contain at least one number.";
+    }
+    if (/(.)\1\1/.test(pw)) {
+      return "Password cannot contain sequences of 3 or more identical characters.";
+    }
+    return "";
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError("");
 
-    if (!password || !confirmPassword) {
-      toast.error("Please fill in all fields");
+    const passwordError = validatePassword(password);
+    if (passwordError) {
+      setError(passwordError);
       return;
     }
 
     if (password !== confirmPassword) {
-      toast.error("Passwords do not match");
-      return;
-    }
-
-    if (password.length < 6) {
-      toast.error("Password must be at least 6 characters long");
+      setError("Password and Confirm Password do not match.");
       return;
     }
 
@@ -47,7 +64,7 @@ const ResetPassword = () => {
       navigate("/login");
     } catch (error) {
       console.error("Reset password error:", error);
-      toast.error(error.response?.data?.message || "Failed to reset password");
+      setError(error.response?.data?.message || "Failed to reset password");
     } finally {
       setLoading(false);
     }
@@ -57,32 +74,53 @@ const ResetPassword = () => {
     <div className="reset-password-container">
       <div className="reset-password-form">
         <h2>Reset Password</h2>
+        {error && <div className="alert alert-danger">{error}</div>}
         <form onSubmit={handleSubmit}>
           <div className="form-group">
             <label htmlFor="password">New Password</label>
-            <input
-              type="password"
-              id="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Enter new password"
-              required
-            />
+            <div className="password-input-container">
+              <input
+                type={showPassword ? "text" : "password"}
+                id="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Enter new password"
+                required
+              />
+              <span 
+                className="password-toggle-icon"
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                {showPassword ? <FaEyeSlash /> : <FaEye />}
+              </span>
+            </div>
           </div>
 
           <div className="form-group">
             <label htmlFor="confirmPassword">Confirm Password</label>
-            <input
-              type="password"
-              id="confirmPassword"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              placeholder="Confirm new password"
-              required
-            />
+            <div className="password-input-container">
+              <input
+                type={showConfirmPassword ? "text" : "password"}
+                id="confirmPassword"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="Confirm new password"
+                required
+              />
+              <span 
+                className="password-toggle-icon"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+              >
+                {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
+              </span>
+            </div>
           </div>
 
-          <button type="submit" disabled={loading}>
+          <button 
+            type="submit" 
+            className="btn btn-primary"
+            disabled={loading}
+          >
             {loading ? "Resetting Password..." : "Reset Password"}
           </button>
         </form>

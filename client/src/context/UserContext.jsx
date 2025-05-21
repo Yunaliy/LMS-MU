@@ -134,7 +134,7 @@ export const UserContextProvider = ({ children }) => {
     setBtnLoading(true);
     try {
       // Fetch Google Client ID from server
-      const response = await fetch('http://localhost:5000/api/auth/google-client-id');
+      const response = await fetch('https://lms-mu.onrender.com/api/auth/google-client-id');
       const data = await response.json();
       
       if (!data.success || !data.clientId) {
