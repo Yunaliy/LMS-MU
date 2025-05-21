@@ -88,6 +88,45 @@ const CourseForm = () => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
+    
+    // Validate price and duration
+    if (name === 'price' || name === 'duration') {
+      // Remove any non-numeric characters except decimal point for price
+      const sanitizedValue = name === 'price' 
+        ? value.replace(/[^0-9.]/g, '')
+        : value.replace(/[^0-9]/g, '');
+      
+      // Ensure only one decimal point for price
+      if (name === 'price') {
+        const parts = sanitizedValue.split('.');
+        if (parts.length > 2) {
+          toast.error('Invalid price format');
+          return;
+        }
+      }
+
+      // Convert to number and validate
+      const numValue = parseFloat(sanitizedValue);
+      if (isNaN(numValue)) {
+        toast.error(`Please enter a valid ${name === 'price' ? 'price' : 'duration'}`);
+        return;
+      }
+      if (numValue < 0) {
+        toast.error(`${name === 'price' ? 'Price' : 'Duration'} cannot be negative`);
+        return;
+      }
+      if (name === 'duration' && numValue < 1) {
+        toast.error('Duration must be at least 1 week');
+        return;
+      }
+
+      setCourse(prev => ({
+        ...prev,
+        [name]: sanitizedValue
+      }));
+      return;
+    }
+
     setCourse(prev => ({
       ...prev,
       [name]: value
@@ -130,6 +169,20 @@ const CourseForm = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Validate price and duration before submission
+    const price = parseFloat(course.price);
+    const duration = parseFloat(course.duration);
+
+    if (isNaN(price) || price < 0) {
+      toast.error('Please enter a valid positive price');
+      return;
+    }
+    if (isNaN(duration) || duration < 1 || !Number.isInteger(duration)) {
+      toast.error('Please enter a valid duration (whole number, minimum 1 week)');
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -248,6 +301,29 @@ const CourseForm = () => {
                   onChange={handleInputChange}
                   required
                   min="1"
+                  step="1"
+                  onKeyPress={(e) => {
+                    if (!/^[0-9]$/.test(e.key)) {
+                      e.preventDefault();
+                    }
+                  }}
+                  onPaste={(e) => {
+                    e.preventDefault();
+                    const pastedText = e.clipboardData.getData('text');
+                    if (!/^\d+$/.test(pastedText)) {
+                      toast.error('Please paste only numbers');
+                      return;
+                    }
+                    const numValue = parseInt(pastedText);
+                    if (numValue < 1) {
+                      toast.error('Duration must be at least 1 week');
+                      return;
+                    }
+                    setCourse(prev => ({
+                      ...prev,
+                      duration: pastedText
+                    }));
+                  }}
                   placeholder="Enter course duration"
                 />
               </div>
@@ -262,6 +338,33 @@ const CourseForm = () => {
                   onChange={handleInputChange}
                   required
                   min="0"
+                  step="0.01"
+                  onKeyPress={(e) => {
+                    if (!/^[0-9.]$/.test(e.key)) {
+                      e.preventDefault();
+                    }
+                    // Prevent multiple decimal points
+                    if (e.key === '.' && course.price.includes('.')) {
+                      e.preventDefault();
+                    }
+                  }}
+                  onPaste={(e) => {
+                    e.preventDefault();
+                    const pastedText = e.clipboardData.getData('text');
+                    if (!/^\d*\.?\d*$/.test(pastedText)) {
+                      toast.error('Please paste only valid numbers');
+                      return;
+                    }
+                    const numValue = parseFloat(pastedText);
+                    if (isNaN(numValue) || numValue < 0) {
+                      toast.error('Please enter a valid positive price');
+                      return;
+                    }
+                    setCourse(prev => ({
+                      ...prev,
+                      price: pastedText
+                    }));
+                  }}
                   placeholder="Enter course price"
                 />
               </div>

@@ -16,6 +16,15 @@ export const register = TryCatch(async (req, res) => {
   const { email, name, password } = req.body;
   const image = req.file;
 
+  // Validate email format
+  const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
+  if (!emailRegex.test(email)) {
+    return res.status(400).json({
+      success: false,
+      message: 'Please enter a valid email address',
+    });
+  }
+
   let user = await User.findOne({ email });
 
   if (user)

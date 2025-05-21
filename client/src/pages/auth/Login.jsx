@@ -3,11 +3,10 @@ import "./auth.css";
 import { Link, useNavigate } from "react-router-dom";
 import { UserData } from "../../context/UserContext";
 import { CourseData } from "../../context/CourseContext";
-import { FcGoogle } from "react-icons/fc";
 
 const Login = () => {
   const navigate = useNavigate();
-  const { btnLoading, loginUser, loginWithGoogle } = UserData();
+  const { btnLoading, loginUser } = UserData();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
@@ -16,14 +15,6 @@ const Login = () => {
   const submitHandler = async (e) => {
     e.preventDefault();
     await loginUser(email, password, navigate, fetchMyCourse);
-  };
-
-  const handleGoogleLogin = async () => {
-    try {
-      await loginWithGoogle(navigate, fetchMyCourse);
-    } catch (error) {
-      console.error("Google login error:", error);
-    }
   };
 
   return (
@@ -67,16 +58,6 @@ const Login = () => {
                     disabled={btnLoading}
                   >
                     {btnLoading ? "Please Wait..." : "Login"}
-                  </button>
-                  
-                  <button
-                    type="button"
-                    className="btn btn-google-hover d-flex align-items-center justify-content-center gap-2"
-                    onClick={handleGoogleLogin}
-                    disabled={btnLoading}
-                  >
-                    <FcGoogle size={20} />
-                    Continue with Google
                   </button>
                 </div>
 
